@@ -7,6 +7,7 @@ require('dotenv').config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const OPENAI_MODEL = process.env.OPENAI_MODEL || 'gpt-4o-mini';
 
 // Middleware
 app.use(cors());
@@ -52,39 +53,55 @@ app.post('/api/upload', upload.single('pdf'), (req, res) => {
   res.json({ message: 'File uploaded successfully', filename: req.file.filename });
 });
 
+// Helper to call OpenAI (Chat Completions)
+async function callOpenAI(userText) {
+  const apiKey = process.env.OPENAI_API_KEY;
+  if (!apiKey) {
+    throw new Error('OpenAI API key not configured. Please add OPENAI_API_KEY to your .env file.');
+  }
+  const url = 'https://api.openai.com/v1/chat/completions';
+  const payload = {
+    model: OPENAI_MODEL,
+    messages: [
+      { role: 'system', content: 'You are a helpful assistant focused on simplifying educational texts and creating vivid, concrete visual descriptions for learning.' },
+      { role: 'user', content: userText }
+    ],
+    temperature: 0.3
+  };
+  const { data } = await axios.post(url, payload, { 
+    headers: { 
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${apiKey}`
+    }
+  });
+  const text = data?.choices?.[0]?.message?.content?.trim() || '';
+  return text;
+}
+
 // AI text simplification endpoint
 app.post('/api/simplify', async (req, res) => {
   try {
     const { text, prompt } = req.body;
     
-    if (!process.env.GEMINI_API_KEY) {
+    if (!process.env.OPENAI_API_KEY) {
       return res.status(500).json({ 
-        error: 'Gemini API key not configured. Please add GEMINI_API_KEY to your .env file.' 
+        error: 'OpenAI API key not configured. Please add OPENAI_API_KEY to your .env file.' 
       });
     }
 
-    const response = await axios.post(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${process.env.GEMINI_API_KEY}`,
-      {
-        contents: [{
-          parts: [{
-            text: prompt || `Please simplify the following text to make it easier to understand, using simpler words and shorter sentences while keeping the original meaning: "${text}"`
-          }]
-        }]
-      },
-      {
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      }
-    );
+    const userPrompt = prompt || `Rewrite the following text using simple language, short sentences, and clear vocabulary, while preserving the original meaning:
+"""
+${text}
+"""`;
 
-    const simplifiedText = response.data.candidates[0].content.parts[0].text;
+    const simplifiedText = await callOpenAI(userPrompt);
     res.json({ simplifiedText });
   } catch (error) {
-    console.error('Error calling Gemini API:', error.response?.data || error.message);
-    res.status(500).json({ 
-      error: 'Failed to simplify text. Please check your API key and try again.' 
+    console.error('Error calling OpenAI API:', error.response?.data || error.message);
+    const status = error.response?.status || 500;
+    const apiMsg = error.response?.data?.error?.message;
+    res.status(status).json({ 
+      error: apiMsg || 'Failed to simplify text. Please check your OpenAI API key and try again.' 
     });
   }
 });
@@ -94,34 +111,25 @@ app.post('/api/generate-image', async (req, res) => {
   try {
     const { text } = req.body;
     
-    if (!process.env.GEMINI_API_KEY) {
+    if (!process.env.OPENAI_API_KEY) {
       return res.status(500).json({ 
-        error: 'Gemini API key not configured. Please add GEMINI_API_KEY to your .env file.' 
+        error: 'OpenAI API key not configured. Please add OPENAI_API_KEY to your .env file.' 
       });
     }
 
-    const response = await axios.post(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${process.env.GEMINI_API_KEY}`,
-      {
-        contents: [{
-          parts: [{
-            text: `Based on this text, create a detailed description for an image that would help visualize and understand the concept: "${text}". Provide a clear, descriptive prompt for image generation.`
-          }]
-        }]
-      },
-      {
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      }
-    );
+    const userPrompt = `Create a clear, visual, and descriptive image prompt that would help a student understand the following concept. Focus on concrete elements, setting, composition, and style suggestions. Text:
+"""
+${text}
+"""`;
 
-    const imageDescription = response.data.candidates[0].content.parts[0].text;
+    const imageDescription = await callOpenAI(userPrompt);
     res.json({ imageDescription });
   } catch (error) {
-    console.error('Error calling Gemini API:', error.response?.data || error.message);
-    res.status(500).json({ 
-      error: 'Failed to generate image description. Please check your API key and try again.' 
+    console.error('Error calling OpenAI API:', error.response?.data || error.message);
+    const status = error.response?.status || 500;
+    const apiMsg = error.response?.data?.error?.message;
+    res.status(status).json({ 
+      error: apiMsg || 'Failed to generate image description. Please check your OpenAI API key and try again.' 
     });
   }
 });
@@ -130,8 +138,8 @@ app.listen(PORT, () => {
   console.log(`🚀 AI PDF Reader server running on http://localhost:${PORT}`);
   console.log('📚 Available features:');
   console.log('  - PDF viewing with zoom and navigation');
-  console.log('  - AI text simplification');
-  console.log('  - AI image generation for concepts');
+  console.log('  - AI text simplification (OpenAI)');
+  console.log('  - AI image generation for concepts (OpenAI)');
   console.log('  - Accessibility controls (font size, brightness)');
   console.log('  - Text selection and highlighting');
 });

@@ -1,7 +1,7 @@
 {
   "name": "ai-pdf-reader",
   "version": "1.0.0",
-  "description": "An AI-enhanced PDF reader with accessibility features and intelligent text assistance",
+  "description": "An AI-enhanced PDF reader with accessibility features and intelligent text assistance (OpenAI-powered)",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
@@ -17,7 +17,7 @@
   "devDependencies": {
     "nodemon": "^3.0.1"
   },
-  "keywords": ["pdf", "ai", "accessibility", "reader", "gemini"],
+  "keywords": ["pdf", "ai", "accessibility", "reader", "openai"],
   "author": "Renan",
   "license": "MIT"
 }

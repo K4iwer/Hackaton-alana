@@ -56,6 +56,14 @@
                         <span id="zoomLevel">100%</span>
                         <button id="zoomIn"><i class="fas fa-search-plus"></i></button>
                     </div>
+                    <div class="search-controls">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="searchInput" placeholder="Pesquisar nesta página..." />
+                        <span id="searchCount" class="search-count">0/0</span>
+                        <button id="searchPrev" title="Anterior" disabled><i class="fas fa-chevron-up"></i></button>
+                        <button id="searchNext" title="Próximo" disabled><i class="fas fa-chevron-down"></i></button>
+                        <button id="searchClear" title="Limpar" disabled><i class="fas fa-times"></i></button>
+                    </div>
                 </div>
                 
                 <div class="pdf-viewer-container">
@@ -105,8 +113,8 @@
                     </div>
                     
                     <div class="chat-input-container">
-                        <input type="text" id="chatInput" placeholder="Digite sua pergunta ou use os botões acima..." disabled>
-                        <button id="sendMessage" disabled>
+                        <input type="text" id="chatInput" placeholder="Digite sua pergunta ou use os botões acima...">
+                        <button id="sendMessage">
                             <i class="fas fa-paper-plane"></i>
                         </button>
                     </div>

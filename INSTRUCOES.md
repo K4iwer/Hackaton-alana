@@ -18,14 +18,15 @@ npm install
 copy .env.example .env
 ```
 
-### 3. Configurar API do Gemini
-1. Acesse: https://makersuite.google.com/app/apikey
-2. Faça login com sua conta Google
-3. Clique em "Create API Key"
+### 3. Configurar API da OpenAI
+1. Acesse: https://platform.openai.com/api-keys
+2. Faça login com sua conta OpenAI
+3. Crie uma API key
 4. Copie a chave gerada
 5. Edite o arquivo `.env` e adicione:
    ```
-   GEMINI_API_KEY=sua_chave_api_aqui
+   OPENAI_API_KEY=sua_chave_api_aqui
+   OPENAI_MODEL=gpt-4o-mini
    PORT=3000
    ```
 
@@ -66,7 +67,7 @@ Abra seu navegador e vá para: **http://localhost:3000**
 
 ### Erro: "Failed to simplify text"
 - **Causa**: Chave da API não configurada ou inválida
-- **Solução**: Verifique o arquivo `.env` e sua chave do Gemini
+- **Solução**: Verifique o arquivo `.env` e sua chave da OpenAI (OPENAI_API_KEY)
 
 ### PDF não carrega
 - **Causa**: Arquivo pode estar corrompido
