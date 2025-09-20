@@ -63,12 +63,14 @@ class AIPDFReader {
         this.simplifyBtn = document.getElementById('simplifyBtn');
         this.generateImageBtn = document.getElementById('generateImageBtn');
         this.continueSelectionBtn = document.getElementById('continueSelectionBtn');
+        this.historicalContextBtn = document.getElementById('historicalContextBtn');
         this.selectedTextDisplay = document.getElementById('selectedTextDisplay');
         this.selectedTextContent = document.getElementById('selectedTextContent');
         this.clearSelectionBtn = document.getElementById('clearSelection');
         this.chatMessages = document.getElementById('chatMessages');
         this.chatInput = document.getElementById('chatInput');
         this.sendMessageBtn = document.getElementById('sendMessage');
+        
         
         // UI elements
         this.keyboardHints = document.getElementById('keyboardHints');
@@ -79,6 +81,7 @@ class AIPDFReader {
         // Loading elements
         this.loadingOverlay = document.getElementById('loadingOverlay');
         this.loadingMessage = document.getElementById('loadingMessage');
+        this.initialMessage = document.getElementById('loadingMessage');
     }
 
     setupEventListeners() {
@@ -113,6 +116,9 @@ class AIPDFReader {
         this.simplifyBtn.addEventListener('click', () => this.simplifySelectedText());
         this.generateImageBtn.addEventListener('click', () => this.generateImageDescription());
         this.continueSelectionBtn.addEventListener('click', () => this.continueSelectionOnNextPage());
+        if (this.historicalContextBtn) {
+            this.historicalContextBtn.addEventListener('click', () => this.generateHistoricalContext());
+        }
         this.clearSelectionBtn.addEventListener('click', () => this.clearSelection());
         this.sendMessageBtn.addEventListener('click', () => this.sendMessage());
         this.chatInput.addEventListener('keypress', (e) => {
@@ -167,6 +173,13 @@ class AIPDFReader {
             await this.renderPage();
             this.updateControls();
             this.hideLoading();
+            
+            // Hide the initial message and show canvas when PDF is loaded
+            if (this.initialMessage) {
+                this.initialMessage.style.display = 'none';
+            }
+            // Show the canvas
+            this.canvas.style.display = 'block';
         } catch (error) {
             console.error('Error loading PDF:', error);
             this.hideLoading();
@@ -195,6 +208,13 @@ class AIPDFReader {
                 await this.loadAvailablePDFs();
                 this.pdfSelector.value = file.name;
                 await this.loadSelectedPDF(file.name);
+                
+                // Hide the initial message and show canvas when PDF is uploaded and loaded
+                if (this.initialMessage) {
+                    this.initialMessage.style.display = 'none';
+                }
+                // Show the canvas
+                this.canvas.style.display = 'block';
             } else {
                 throw new Error('Upload failed');
             }
@@ -401,6 +421,7 @@ class AIPDFReader {
                 this.selectedTextDisplay.style.display = 'block';
                 this.simplifyBtn.disabled = false;
                 this.generateImageBtn.disabled = false;
+                if (this.historicalContextBtn) this.historicalContextBtn.disabled = false;
                 this.chatInput.disabled = false;
                 this.sendMessageBtn.disabled = false;
                 this.continueSelectionBtn.disabled = false;
@@ -467,6 +488,20 @@ class AIPDFReader {
         if (currentPageText) {
             // Highlight the selected text on current page
             this.highlightTextOnCurrentPage(currentPageText);
+            
+            // Restore UI state for multi-page selection
+            this.selectedText = this.multiPageSelection.totalText;
+            this.selectedTextContent.innerHTML = this.multiPageSelection.totalText;
+            this.selectedTextDisplay.style.display = 'block';
+            this.simplifyBtn.disabled = false;
+            this.generateImageBtn.disabled = false;
+            if (this.historicalContextBtn) this.historicalContextBtn.disabled = false;
+            this.continueSelectionBtn.disabled = false;
+            this.chatInput.disabled = false;
+            this.sendMessageBtn.disabled = false;
+            
+            // Update the selection indicator
+            this.updateSelectionIndicator();
         }
     }
 
@@ -536,6 +571,7 @@ class AIPDFReader {
         this.simplifyBtn.disabled = true;
         this.generateImageBtn.disabled = true;
         this.continueSelectionBtn.disabled = true;
+        if (this.historicalContextBtn) this.historicalContextBtn.disabled = true;
         this.hideKeyboardHints();
         window.getSelection().removeAllRanges();
     }
@@ -635,6 +671,41 @@ class AIPDFReader {
                 this.addMessage('ai', '⚠️ Falha ao conectar ao servidor. Verifique se o servidor está rodando com "npm start" e tente novamente.');
             } else {
                 this.addMessage('ai', 'Desculpe, ocorreu um erro ao gerar a descrição da imagem. Verifique se a chave da API do Gemini está configurada no arquivo .env e reinicie o servidor.');
+            }
+        } finally {
+            this.hideLoading();
+        }
+    }
+
+    async generateHistoricalContext() {
+        console.log('generateHistoricalContext called with text:', this.selectedText);
+        if (!this.selectedText) return;
+
+        try {
+            this.showLoading('Analisando contexto histórico...');
+            const response = await fetch('/api/historical-context', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ text: this.selectedText })
+            });
+
+            const data = await response.json();
+            
+            if (response.ok) {
+                this.addMessage('user', `Contexto histórico para: "${this.selectedText}"`);
+                this.addMessage('ai', `🏛️ ${data.historicalContext}`);
+            } else {
+                throw new Error(data.error);
+            }
+        } catch (error) {
+            console.error('Error generating historical context:', error);
+            const offline = error?.message?.toLowerCase?.().includes('failed') || error?.name === 'TypeError';
+            if (offline) {
+                this.addMessage('ai', '⚠️ Falha ao conectar ao servidor. Verifique se o servidor está rodando com "npm start" e tente novamente.');
+            } else {
+                this.addMessage('ai', 'Desculpe, ocorreu um erro ao gerar o contexto histórico. Verifique se a chave da API do Gemini está configurada no arquivo .env e reinicie o servidor.');
             }
         } finally {
             this.hideLoading();

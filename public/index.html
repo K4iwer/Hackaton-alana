@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI PDF Reader - Leitor Inteligente</title>
+    <title>LivrAI</title>
     <link rel="stylesheet" href="styles.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -16,7 +16,7 @@
         <!-- Header -->
         <header class="header">
             <div class="header-left">
-                <h1><i class="fas fa-book-reader"></i> AI PDF Reader</h1>
+                <h1><i class="fas fa-book-reader"></i> LivrAI</h1>
                 <div class="file-controls">
                     <select id="pdfSelector" class="pdf-selector">
                         <option value="">Selecione um PDF...</option>
@@ -90,6 +90,9 @@
                         <button id="continueSelectionBtn" class="tool-btn" disabled title="Continuar seleção na próxima página (Ctrl+Enter)">
                             <i class="fas fa-arrow-right"></i> Continuar Seleção
                         </button>
+                        <button id="historicalContextBtn" class="tool-btn" disabled>
+                            <i class="fas fa-history"></i> Contexto Histórico
+                        </button>
                     </div>
                 </div>
                 
@@ -109,6 +112,7 @@
                             <ul>
                                 <li>✨ Simplificar textos complexos</li>
                                 <li>🎨 Criar descrições visuais para conceitos</li>
+                                <li>🏛️ Explicar o contexto histórico</li>
                                 <li>💡 Explicar termos difíceis</li>
                                 <li>📚 Resumir seções longas</li>
                             </ul>
