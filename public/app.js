@@ -399,7 +399,7 @@ class AIPDFReader {
             if (offline) {
                 this.addMessage('ai', '⚠️ Falha ao conectar ao servidor. Verifique se o servidor está rodando com "npm start" e tente novamente.');
             } else {
-                this.addMessage('ai', 'Desculpe, ocorreu um erro ao simplificar o texto. Verifique se a chave da API do Gemini está configurada no arquivo .env e reinicie o servidor.');
+                this.addMessage('ai', 'Desculpe, ocorreu um erro ao simplificar o texto. Verifique se a chave da API da OpenAI (OPENAI_API_KEY) está configurada no arquivo .env e reinicie o servidor.');
             }
         } finally {
             this.hideLoading();
@@ -433,7 +433,7 @@ class AIPDFReader {
             if (offline) {
                 this.addMessage('ai', '⚠️ Falha ao conectar ao servidor. Verifique se o servidor está rodando com "npm start" e tente novamente.');
             } else {
-                this.addMessage('ai', 'Desculpe, ocorreu um erro ao gerar a descrição da imagem. Verifique se a chave da API do Gemini está configurada no arquivo .env e reinicie o servidor.');
+                this.addMessage('ai', 'Desculpe, ocorreu um erro ao gerar a descrição da imagem. Verifique se a chave da API da OpenAI (OPENAI_API_KEY) está configurada no arquivo .env e reinicie o servidor.');
             }
         } finally {
             this.hideLoading();
@@ -477,7 +477,7 @@ class AIPDFReader {
             if (offline) {
                 this.addMessage('ai', '⚠️ Não consegui comunicar com o servidor. Inicie o servidor com "npm start" e acesse via http://localhost:3000.');
             } else {
-                this.addMessage('ai', 'Desculpe, ocorreu um erro ao processar sua mensagem. Verifique se a chave da API do Gemini está configurada corretamente no arquivo .env e reinicie o servidor.');
+                this.addMessage('ai', 'Desculpe, ocorreu um erro ao processar sua mensagem. Verifique se a chave da API da OpenAI (OPENAI_API_KEY) está configurada corretamente no arquivo .env e reinicie o servidor.');
             }
         } finally {
             this.hideLoading();

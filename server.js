@@ -7,7 +7,7 @@ require('dotenv').config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-1.5-flash';
+const OPENAI_MODEL = process.env.OPENAI_MODEL || 'gpt-4o-mini';
 
 // Middleware
 app.use(cors());
@@ -53,20 +53,28 @@ app.post('/api/upload', upload.single('pdf'), (req, res) => {
   res.json({ message: 'File uploaded successfully', filename: req.file.filename });
 });
 
-// Helper to call Gemini
-async function callGeminiGenerateContent(userText) {
-  const url = `https://generativelanguage.googleapis.com/v1/models/${encodeURIComponent(GEMINI_MODEL)}:generateContent?key=${process.env.GEMINI_API_KEY}`;
+// Helper to call OpenAI (Chat Completions)
+async function callOpenAI(userText) {
+  const apiKey = process.env.OPENAI_API_KEY;
+  if (!apiKey) {
+    throw new Error('OpenAI API key not configured. Please add OPENAI_API_KEY to your .env file.');
+  }
+  const url = 'https://api.openai.com/v1/chat/completions';
   const payload = {
-    contents: [
-      {
-        role: 'user',
-        parts: [{ text: userText }]
-      }
-    ]
+    model: OPENAI_MODEL,
+    messages: [
+      { role: 'system', content: 'You are a helpful assistant focused on simplifying educational texts and creating vivid, concrete visual descriptions for learning.' },
+      { role: 'user', content: userText }
+    ],
+    temperature: 0.3
   };
-  const { data } = await axios.post(url, payload, { headers: { 'Content-Type': 'application/json' } });
-  // Join all parts text safely
-  const text = data?.candidates?.[0]?.content?.parts?.map(p => p.text).join('') || '';
+  const { data } = await axios.post(url, payload, { 
+    headers: { 
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${apiKey}`
+    }
+  });
+  const text = data?.choices?.[0]?.message?.content?.trim() || '';
   return text;
 }
 
@@ -75,9 +83,9 @@ app.post('/api/simplify', async (req, res) => {
   try {
     const { text, prompt } = req.body;
     
-    if (!process.env.GEMINI_API_KEY) {
+    if (!process.env.OPENAI_API_KEY) {
       return res.status(500).json({ 
-        error: 'Gemini API key not configured. Please add GEMINI_API_KEY to your .env file.' 
+        error: 'OpenAI API key not configured. Please add OPENAI_API_KEY to your .env file.' 
       });
     }
 
@@ -86,14 +94,14 @@ app.post('/api/simplify', async (req, res) => {
 ${text}
 """`;
 
-    const simplifiedText = await callGeminiGenerateContent(userPrompt);
+    const simplifiedText = await callOpenAI(userPrompt);
     res.json({ simplifiedText });
   } catch (error) {
-    console.error('Error calling Gemini API:', error.response?.data || error.message);
+    console.error('Error calling OpenAI API:', error.response?.data || error.message);
     const status = error.response?.status || 500;
     const apiMsg = error.response?.data?.error?.message;
     res.status(status).json({ 
-      error: apiMsg || 'Failed to simplify text. Please check your API key and try again.' 
+      error: apiMsg || 'Failed to simplify text. Please check your OpenAI API key and try again.' 
     });
   }
 });
@@ -103,9 +111,9 @@ app.post('/api/generate-image', async (req, res) => {
   try {
     const { text } = req.body;
     
-    if (!process.env.GEMINI_API_KEY) {
+    if (!process.env.OPENAI_API_KEY) {
       return res.status(500).json({ 
-        error: 'Gemini API key not configured. Please add GEMINI_API_KEY to your .env file.' 
+        error: 'OpenAI API key not configured. Please add OPENAI_API_KEY to your .env file.' 
       });
     }
 
@@ -114,14 +122,14 @@ app.post('/api/generate-image', async (req, res) => {
 ${text}
 """`;
 
-    const imageDescription = await callGeminiGenerateContent(userPrompt);
+    const imageDescription = await callOpenAI(userPrompt);
     res.json({ imageDescription });
   } catch (error) {
-    console.error('Error calling Gemini API:', error.response?.data || error.message);
+    console.error('Error calling OpenAI API:', error.response?.data || error.message);
     const status = error.response?.status || 500;
     const apiMsg = error.response?.data?.error?.message;
     res.status(status).json({ 
-      error: apiMsg || 'Failed to generate image description. Please check your API key and try again.' 
+      error: apiMsg || 'Failed to generate image description. Please check your OpenAI API key and try again.' 
     });
   }
 });
@@ -130,8 +138,8 @@ app.listen(PORT, () => {
   console.log(`🚀 AI PDF Reader server running on http://localhost:${PORT}`);
   console.log('📚 Available features:');
   console.log('  - PDF viewing with zoom and navigation');
-  console.log('  - AI text simplification');
-  console.log('  - AI image generation for concepts');
+  console.log('  - AI text simplification (OpenAI)');
+  console.log('  - AI image generation for concepts (OpenAI)');
   console.log('  - Accessibility controls (font size, brightness)');
   console.log('  - Text selection and highlighting');
 });
