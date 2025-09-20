@@ -112,9 +112,10 @@ app.post('/api/summarize', async (req, res) => {
 
     const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
     
-    const prompt = `Faça um resumo detalhado e explicativo do seguinte texto em português. 
-    Inclua os pontos principais, conceitos importantes e explique o contexto quando necessário. 
-    O resumo deve ser informativo e educativo:
+    const prompt = `Faça um resumo claro e objetivo do seguinte texto em português. 
+    Identifique e explique os pontos principais, conceitos-chave e ideias centrais do texto.
+    Mantenha o foco no conteúdo do texto, não no contexto histórico.
+    O resumo deve ser informativo e didático:
 
     ${text}`;
     

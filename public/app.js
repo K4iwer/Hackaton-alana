@@ -1040,6 +1040,40 @@ class AIPDFReader {
         }
     }
 
+    async generateHistoricalContext() {
+        if (!this.selectedText) return;
+
+        try {
+            this.showLoading('Analisando contexto histórico...');
+            const response = await fetch('/api/historical-context', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ text: this.selectedText })
+            });
+
+            const data = await response.json();
+            
+            if (response.ok) {
+                this.addMessage('user', `🏛️ Contexto Histórico: "${this.selectedText.substring(0, 100)}${this.selectedText.length > 100 ? '...' : ''}"`);
+                this.addMessage('ai', data.historicalContext);
+            } else {
+                throw new Error(data.error);
+            }
+        } catch (error) {
+            console.error('Error generating historical context:', error);
+            const offline = error?.message?.toLowerCase?.().includes('failed') || error?.name === 'TypeError';
+            if (offline) {
+                this.addMessage('ai', '⚠️ Falha ao conectar ao servidor. Verifique se o servidor está rodando com "npm start" e tente novamente.');
+            } else {
+                this.addMessage('ai', 'Desculpe, ocorreu um erro ao gerar o contexto histórico. Verifique se a chave da API do Gemini está configurada no arquivo .env e reinicie o servidor.');
+            }
+        } finally {
+            this.hideLoading();
+        }
+    }
+
     async generateImageDescription() {
         if (!this.selectedText) return;
 
