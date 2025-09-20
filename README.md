@@ -166,7 +166,7 @@ Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para ma
 
 ## 👥 Equipe
 
-Desenvolvido durante o Hackathon Alana por **Renan**.
+Desenvolvido durante o Hackathon Alana pela eqiupe coração.
 
 ## 🆘 Suporte
 
