@@ -62,8 +62,10 @@ class AIPDFReader {
         // AI elements
         this.simplifyBtn = document.getElementById('simplifyBtn');
         this.generateImageBtn = document.getElementById('generateImageBtn');
-        this.continueSelectionBtn = document.getElementById('continueSelectionBtn');
+        this.summarizeBtn = document.getElementById('summarizeBtn');
+        this.dictionaryBtn = document.getElementById('dictionaryBtn');
         this.historicalContextBtn = document.getElementById('historicalContextBtn');
+        this.continueSelectionBtn = document.getElementById('continueSelectionBtn');
         this.selectedTextDisplay = document.getElementById('selectedTextDisplay');
         this.selectedTextContent = document.getElementById('selectedTextContent');
         this.clearSelectionBtn = document.getElementById('clearSelection');
@@ -74,6 +76,33 @@ class AIPDFReader {
         
         // UI elements
         this.keyboardHints = document.getElementById('keyboardHints');
+        this.selectionPopup = document.getElementById('selectionPopup');
+        this.popupTextPreview = document.getElementById('popupTextPreview');
+        this.closePopupBtn = document.getElementById('closePopup');
+        
+        // Tools navigation
+        this.aiToolsScroll = document.getElementById('aiToolsScroll');
+        this.toolsPrevBtn = document.getElementById('toolsPrev');
+        this.toolsNextBtn = document.getElementById('toolsNext');
+        
+        // Layout controls
+        this.mainContent = document.querySelector('.main-content');
+        this.pdfSection = document.getElementById('pdfSection');
+        this.aiSection = document.getElementById('aiSection');
+        this.resizeDivider = document.getElementById('resizeDivider');
+        this.layoutPdfFocus = document.getElementById('layoutPdfFocus');
+        this.layoutBalanced = document.getElementById('layoutBalanced');
+        this.layoutChatFocus = document.getElementById('layoutChatFocus');
+        
+        
+        // Popup buttons
+        this.popupSimplifyBtn = document.getElementById('popupSimplifyBtn');
+        this.popupGenerateImageBtn = document.getElementById('popupGenerateImageBtn');
+        this.popupSummarizeBtn = document.getElementById('popupSummarizeBtn');
+        this.popupDictionaryBtn = document.getElementById('popupDictionaryBtn');
+        this.popupHistoricalContextBtn = document.getElementById('popupHistoricalContextBtn');
+        this.popupContinueSelectionBtn = document.getElementById('popupContinueSelectionBtn');
+        
         // Enable chat by default (chat can work with or without selection)
         if (this.chatInput) this.chatInput.disabled = false;
         if (this.sendMessageBtn) this.sendMessageBtn.disabled = false;
@@ -115,6 +144,8 @@ class AIPDFReader {
         // AI controls
         this.simplifyBtn.addEventListener('click', () => this.simplifySelectedText());
         this.generateImageBtn.addEventListener('click', () => this.generateImageDescription());
+        this.summarizeBtn.addEventListener('click', () => this.summarizeSelectedText());
+        this.dictionaryBtn.addEventListener('click', () => this.lookupDictionary());
         this.continueSelectionBtn.addEventListener('click', () => this.continueSelectionOnNextPage());
         if (this.historicalContextBtn) {
             this.historicalContextBtn.addEventListener('click', () => this.generateHistoricalContext());
@@ -137,8 +168,79 @@ class AIPDFReader {
             }
             if (e.key === 'Escape') {
                 this.clearMultiPageSelection();
+                this.hideSelectionPopup();
             }
         });
+        
+        // Selection popup event listeners
+        this.closePopupBtn.addEventListener('click', () => this.hideSelectionPopup());
+        this.popupSimplifyBtn.addEventListener('click', () => {
+            this.hideSelectionPopup();
+            this.simplifySelectedText();
+        });
+        this.popupGenerateImageBtn.addEventListener('click', () => {
+            this.hideSelectionPopup();
+            this.generateImageDescription();
+        });
+        this.popupSummarizeBtn.addEventListener('click', () => {
+            this.hideSelectionPopup();
+            this.summarizeSelectedText();
+        });
+        this.popupDictionaryBtn.addEventListener('click', () => {
+            this.hideSelectionPopup();
+            this.lookupDictionary();
+        });
+        if (this.popupHistoricalContextBtn) {
+            this.popupHistoricalContextBtn.addEventListener('click', () => {
+                this.hideSelectionPopup();
+                this.generateHistoricalContext();
+            });
+        }
+        this.popupContinueSelectionBtn.addEventListener('click', () => {
+            this.hideSelectionPopup();
+            this.continueSelectionOnNextPage();
+        });
+        
+        // Hide popup when clicking outside
+        document.addEventListener('click', (e) => {
+            if (this.selectionPopup.style.display === 'block' && 
+                !this.selectionPopup.contains(e.target) && 
+                !window.getSelection().toString().trim()) {
+                this.hideSelectionPopup();
+            }
+        });
+        
+        // Tools navigation
+        this.toolsPrevBtn.addEventListener('click', () => this.scrollToolsLeft());
+        this.toolsNextBtn.addEventListener('click', () => this.scrollToolsRight());
+        
+        // Update navigation buttons on scroll
+        this.aiToolsScroll.addEventListener('scroll', () => this.updateToolsNavigation());
+        
+        // Initial navigation state
+        this.updateToolsNavigation();
+        
+        // Update navigation on window resize
+        window.addEventListener('resize', () => {
+            setTimeout(() => this.updateToolsNavigation(), 100);
+        });
+        
+        // Layout controls
+        if (this.layoutPdfFocus) {
+            this.layoutPdfFocus.addEventListener('click', () => this.setLayout('pdf-focus'));
+        }
+        if (this.layoutBalanced) {
+            this.layoutBalanced.addEventListener('click', () => this.setLayout('balanced'));
+        }
+        if (this.layoutChatFocus) {
+            this.layoutChatFocus.addEventListener('click', () => this.setLayout('chat-focus'));
+        }
+        
+        // Resize divider
+        this.setupResizeDivider();
+        
+        // Load saved layout preference
+        this.loadLayoutPreference();
     }
 
     async loadAvailablePDFs() {
@@ -421,6 +523,8 @@ class AIPDFReader {
                 this.selectedTextDisplay.style.display = 'block';
                 this.simplifyBtn.disabled = false;
                 this.generateImageBtn.disabled = false;
+                this.summarizeBtn.disabled = false;
+                this.dictionaryBtn.disabled = false;
                 if (this.historicalContextBtn) this.historicalContextBtn.disabled = false;
                 this.chatInput.disabled = false;
                 this.sendMessageBtn.disabled = false;
@@ -428,7 +532,13 @@ class AIPDFReader {
                 
                 // Initialize multi-page selection
                 this.initializeMultiPageSelection(selectedText);
+                
+                // Show selection popup
+                this.showSelectionPopup(selectedText, selection);
             }
+        } else {
+            // No text selected, hide popup
+            this.hideSelectionPopup();
         }
         
         this.isExtendingSelection = false;
@@ -467,6 +577,12 @@ class AIPDFReader {
         this.multiPageSelection.totalText = combinedText;
         this.selectedTextContent.innerHTML = combinedText;
         this.updateSelectionIndicator();
+        
+        // Update popup if visible
+        if (this.selectionPopup.style.display === 'block') {
+            this.popupTextPreview.textContent = combinedText.length > 100 ? 
+                combinedText.substring(0, 100) + '...' : combinedText;
+        }
     }
 
     continueSelectionOnNextPage() {
@@ -570,9 +686,12 @@ class AIPDFReader {
         this.selectedTextDisplay.style.display = 'none';
         this.simplifyBtn.disabled = true;
         this.generateImageBtn.disabled = true;
+        this.summarizeBtn.disabled = true;
+        this.dictionaryBtn.disabled = true;
         this.continueSelectionBtn.disabled = true;
         if (this.historicalContextBtn) this.historicalContextBtn.disabled = true;
         this.hideKeyboardHints();
+        this.hideSelectionPopup();
         window.getSelection().removeAllRanges();
     }
 
@@ -606,6 +725,209 @@ class AIPDFReader {
     hideKeyboardHints() {
         if (this.keyboardHints) {
             this.keyboardHints.classList.remove('show');
+        }
+    }
+
+    showSelectionPopup(selectedText, selection) {
+        if (!this.selectionPopup) return;
+        
+        // Update popup content
+        this.popupTextPreview.textContent = selectedText.length > 100 ? 
+            selectedText.substring(0, 100) + '...' : selectedText;
+        
+        // Position popup near the selection
+        const rect = selection.getRangeAt(0).getBoundingClientRect();
+        const popupWidth = 320;
+        const popupHeight = 200;
+        
+        let left = rect.left + (rect.width / 2) - (popupWidth / 2);
+        let top = rect.bottom + 10;
+        
+        // Ensure popup stays within viewport
+        const viewportWidth = window.innerWidth;
+        const viewportHeight = window.innerHeight;
+        
+        if (left < 10) left = 10;
+        if (left + popupWidth > viewportWidth - 10) left = viewportWidth - popupWidth - 10;
+        
+        if (top + popupHeight > viewportHeight - 10) {
+            top = rect.top - popupHeight - 10;
+        }
+        
+        // Show popup
+        this.selectionPopup.style.left = left + 'px';
+        this.selectionPopup.style.top = top + 'px';
+        this.selectionPopup.style.display = 'block';
+        
+        // Update popup button states based on multi-page selection
+        if (this.multiPageSelection.isActive && this.currentPage < this.pdfDoc?.numPages) {
+            this.popupContinueSelectionBtn.style.display = 'flex';
+        } else {
+            this.popupContinueSelectionBtn.style.display = 'none';
+        }
+        
+        // Auto-hide after 10 seconds
+        setTimeout(() => {
+            if (this.selectionPopup.style.display === 'block') {
+                this.hideSelectionPopup();
+            }
+        }, 10000);
+    }
+
+    hideSelectionPopup() {
+        if (this.selectionPopup) {
+            this.selectionPopup.style.display = 'none';
+        }
+    }
+
+    scrollToolsLeft() {
+        const scrollAmount = 120;
+        this.aiToolsScroll.scrollBy({
+            left: -scrollAmount,
+            behavior: 'smooth'
+        });
+    }
+
+    scrollToolsRight() {
+        const scrollAmount = 120;
+        this.aiToolsScroll.scrollBy({
+            left: scrollAmount,
+            behavior: 'smooth'
+        });
+    }
+
+    updateToolsNavigation() {
+        if (!this.aiToolsScroll || !this.toolsPrevBtn || !this.toolsNextBtn) return;
+        
+        const scrollLeft = this.aiToolsScroll.scrollLeft;
+        const scrollWidth = this.aiToolsScroll.scrollWidth;
+        const clientWidth = this.aiToolsScroll.clientWidth;
+        
+        // Check if we can scroll left
+        this.toolsPrevBtn.disabled = scrollLeft <= 0;
+        
+        // Check if we can scroll right
+        this.toolsNextBtn.disabled = scrollLeft >= (scrollWidth - clientWidth - 1);
+        
+        // Hide navigation if not needed
+        const needsNavigation = scrollWidth > clientWidth;
+        this.toolsPrevBtn.style.display = needsNavigation ? 'flex' : 'none';
+        this.toolsNextBtn.style.display = needsNavigation ? 'flex' : 'none';
+    }
+
+    setLayout(layoutType) {
+        // Remove all layout classes
+        this.mainContent.classList.remove('pdf-focus', 'balanced', 'chat-focus');
+        
+        // Add new layout class
+        this.mainContent.classList.add(layoutType);
+        
+        // Update active button
+        document.querySelectorAll('.layout-btn-header').forEach(btn => btn.classList.remove('active'));
+        
+        switch(layoutType) {
+            case 'pdf-focus':
+                this.layoutPdfFocus.classList.add('active');
+                break;
+            case 'balanced':
+                this.layoutBalanced.classList.add('active');
+                break;
+            case 'chat-focus':
+                this.layoutChatFocus.classList.add('active');
+                break;
+        }
+        
+        // Save preference
+        localStorage.setItem('layoutPreference', layoutType);
+        
+        // Update canvas size after layout change
+        setTimeout(() => {
+            if (this.pdfDoc && this.currentPage) {
+                this.renderPage();
+            }
+        }, 350); // Wait for transition to complete
+    }
+
+    setupResizeDivider() {
+        let isResizing = false;
+        let startX = 0;
+        let startPdfWidth = 0;
+        
+        this.resizeDivider.addEventListener('mousedown', (e) => {
+            isResizing = true;
+            startX = e.clientX;
+            startPdfWidth = this.pdfSection.offsetWidth;
+            
+            // Add visual feedback
+            document.body.style.cursor = 'col-resize';
+            this.resizeDivider.style.background = 'linear-gradient(to bottom, #667eea, #764ba2)';
+            
+            // Prevent text selection during resize
+            document.body.style.userSelect = 'none';
+            
+            e.preventDefault();
+        });
+        
+        document.addEventListener('mousemove', (e) => {
+            if (!isResizing) return;
+            
+            const deltaX = e.clientX - startX;
+            const containerWidth = this.mainContent.offsetWidth - 6; // Subtract divider width
+            const newPdfWidth = startPdfWidth + deltaX;
+            
+            // Calculate percentages
+            const pdfPercent = Math.max(20, Math.min(80, (newPdfWidth / containerWidth) * 100));
+            const aiPercent = 100 - pdfPercent;
+            
+            // Apply new sizes
+            this.pdfSection.style.flex = `0 0 ${pdfPercent}%`;
+            this.aiSection.style.flex = `0 0 ${aiPercent}%`;
+            
+            // Remove preset classes when manually resizing
+            this.mainContent.classList.remove('pdf-focus', 'balanced', 'chat-focus');
+            document.querySelectorAll('.layout-btn-header').forEach(btn => btn.classList.remove('active'));
+        });
+        
+        document.addEventListener('mouseup', () => {
+            if (isResizing) {
+                isResizing = false;
+                document.body.style.cursor = '';
+                document.body.style.userSelect = '';
+                this.resizeDivider.style.background = '';
+                
+                // Save custom layout
+                const pdfPercent = parseFloat(this.pdfSection.style.flex.split(' ')[2]);
+                localStorage.setItem('customLayout', JSON.stringify({
+                    pdfWidth: pdfPercent,
+                    aiWidth: 100 - pdfPercent
+                }));
+                
+                // Re-render PDF after resize
+                setTimeout(() => {
+                    if (this.pdfDoc && this.currentPage) {
+                        this.renderPage();
+                    }
+                }, 100);
+            }
+        });
+    }
+
+    loadLayoutPreference() {
+        const savedLayout = localStorage.getItem('layoutPreference');
+        const customLayout = localStorage.getItem('customLayout');
+        
+        if (customLayout) {
+            // Load custom layout
+            const layout = JSON.parse(customLayout);
+            this.pdfSection.style.flex = `0 0 ${layout.pdfWidth}%`;
+            this.aiSection.style.flex = `0 0 ${layout.aiWidth}%`;
+            // Don't activate any preset button for custom layouts
+        } else if (savedLayout) {
+            // Load preset layout
+            this.setLayout(savedLayout);
+        } else {
+            // Default to balanced
+            this.setLayout('balanced');
         }
     }
 
@@ -643,11 +965,86 @@ class AIPDFReader {
         }
     }
 
+    async summarizeSelectedText() {
+        if (!this.selectedText) return;
+
+        try {
+            this.showLoading('Resumindo texto...');
+            const response = await fetch('/api/summarize', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ text: this.selectedText })
+            });
+
+            const data = await response.json();
+            
+            if (response.ok) {
+                this.addMessage('user', `📋 Resumir: "${this.selectedText.substring(0, 100)}${this.selectedText.length > 100 ? '...' : ''}"`);
+                this.addMessage('ai', data.summary);
+            } else {
+                throw new Error(data.error);
+            }
+        } catch (error) {
+            console.error('Error summarizing text:', error);
+            const offline = error?.message?.toLowerCase?.().includes('failed') || error?.name === 'TypeError';
+            if (offline) {
+                this.addMessage('ai', '⚠️ Falha ao conectar ao servidor. Verifique se o servidor está rodando com "npm start" e tente novamente.');
+            } else {
+                this.addMessage('ai', 'Desculpe, ocorreu um erro ao resumir o texto. Verifique se a chave da API do Gemini está configurada no arquivo .env e reinicie o servidor.');
+            }
+        } finally {
+            this.hideLoading();
+        }
+    }
+
+    async lookupDictionary() {
+        if (!this.selectedText) return;
+
+        // For dictionary, we want single words or short phrases
+        const text = this.selectedText.trim();
+        if (text.split(' ').length > 3) {
+            this.addMessage('ai', '📚 Para consulta no dicionário, selecione uma palavra ou frase curta (máximo 3 palavras).');
+            return;
+        }
+
+        try {
+            this.showLoading('Consultando dicionário...');
+            const response = await fetch('/api/dictionary', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ word: text })
+            });
+
+            const data = await response.json();
+            
+            if (response.ok) {
+                this.addMessage('user', `📚 Dicionário: "${text}"`);
+                this.addMessage('ai', data.definition);
+            } else {
+                throw new Error(data.error);
+            }
+        } catch (error) {
+            console.error('Error looking up dictionary:', error);
+            const offline = error?.message?.toLowerCase?.().includes('failed') || error?.name === 'TypeError';
+            if (offline) {
+                this.addMessage('ai', '⚠️ Falha ao conectar ao servidor. Verifique se o servidor está rodando com "npm start" e tente novamente.');
+            } else {
+                this.addMessage('ai', 'Desculpe, ocorreu um erro ao consultar o dicionário. Verifique se a chave da API do Gemini está configurada no arquivo .env e reinicie o servidor.');
+            }
+        } finally {
+            this.hideLoading();
+        }
+    }
+
     async generateImageDescription() {
         if (!this.selectedText) return;
 
         try {
-            this.showLoading('Gerando descrição da imagem...');
+            this.showLoading('Gerando imagem...');
             const response = await fetch('/api/generate-image', {
                 method: 'POST',
                 headers: {
@@ -658,54 +1055,19 @@ class AIPDFReader {
 
             const data = await response.json();
             
-            if (response.ok) {
+            if (response.ok && data.success) {
                 this.addMessage('user', `Gerar imagem para: "${this.selectedText}"`);
-                this.addMessage('ai', `🎨 Descrição visual: ${data.imageDescription}`);
+                this.addImageMessage('ai', data.imageUrl, data.prompt);
             } else {
-                throw new Error(data.error);
+                throw new Error(data.error || 'Failed to generate image');
             }
         } catch (error) {
-            console.error('Error generating image description:', error);
+            console.error('Error generating image:', error);
             const offline = error?.message?.toLowerCase?.().includes('failed') || error?.name === 'TypeError';
             if (offline) {
                 this.addMessage('ai', '⚠️ Falha ao conectar ao servidor. Verifique se o servidor está rodando com "npm start" e tente novamente.');
             } else {
-                this.addMessage('ai', 'Desculpe, ocorreu um erro ao gerar a descrição da imagem. Verifique se a chave da API do Gemini está configurada no arquivo .env e reinicie o servidor.');
-            }
-        } finally {
-            this.hideLoading();
-        }
-    }
-
-    async generateHistoricalContext() {
-        console.log('generateHistoricalContext called with text:', this.selectedText);
-        if (!this.selectedText) return;
-
-        try {
-            this.showLoading('Analisando contexto histórico...');
-            const response = await fetch('/api/historical-context', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ text: this.selectedText })
-            });
-
-            const data = await response.json();
-            
-            if (response.ok) {
-                this.addMessage('user', `Contexto histórico para: "${this.selectedText}"`);
-                this.addMessage('ai', `🏛️ ${data.historicalContext}`);
-            } else {
-                throw new Error(data.error);
-            }
-        } catch (error) {
-            console.error('Error generating historical context:', error);
-            const offline = error?.message?.toLowerCase?.().includes('failed') || error?.name === 'TypeError';
-            if (offline) {
-                this.addMessage('ai', '⚠️ Falha ao conectar ao servidor. Verifique se o servidor está rodando com "npm start" e tente novamente.');
-            } else {
-                this.addMessage('ai', 'Desculpe, ocorreu um erro ao gerar o contexto histórico. Verifique se a chave da API do Gemini está configurada no arquivo .env e reinicie o servidor.');
+                this.addRetryMessage('ai', 'Desculpe, ocorreu um erro ao gerar a imagem. O serviço pode estar temporariamente indisponível.', 'generateImageDescription');
             }
         } finally {
             this.hideLoading();
@@ -760,6 +1122,129 @@ class AIPDFReader {
         const messageDiv = document.createElement('div');
         messageDiv.className = `message ${sender}`;
         messageDiv.textContent = text;
+        
+        // Remove welcome message if it exists
+        const welcomeMessage = this.chatMessages.querySelector('.welcome-message');
+        if (welcomeMessage) {
+            welcomeMessage.remove();
+        }
+        
+        this.chatMessages.appendChild(messageDiv);
+        this.chatMessages.scrollTop = this.chatMessages.scrollHeight;
+    }
+
+    addImageMessage(sender, imageUrl, prompt) {
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `message ${sender} image-message`;
+        
+        // Create image container
+        const imageContainer = document.createElement('div');
+        imageContainer.className = 'image-container';
+        
+        // Create image element
+        const img = document.createElement('img');
+        img.src = imageUrl;
+        img.alt = 'Generated image';
+        img.className = 'generated-image';
+        img.style.cssText = `
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin: 10px 0;
+        `;
+        
+        // Add loading placeholder
+        img.onload = () => {
+            loadingDiv.style.display = 'none';
+            img.style.display = 'block';
+        };
+        
+        img.onerror = () => {
+            loadingDiv.innerHTML = `
+                <div style="text-align: center; padding: 20px;">
+                    <p>❌ Erro ao carregar imagem</p>
+                    <button onclick="this.parentElement.parentElement.parentElement.querySelector('img').src = this.parentElement.parentElement.parentElement.querySelector('img').src + '&retry=' + Date.now()" 
+                            style="margin-top: 10px; padding: 8px 16px; background: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                        <i class="fas fa-redo"></i> Tentar Novamente
+                    </button>
+                </div>
+            `;
+            loadingDiv.style.color = '#e74c3c';
+        };
+        
+        // Create loading indicator
+        const loadingDiv = document.createElement('div');
+        loadingDiv.innerHTML = '🎨 Carregando imagem...';
+        loadingDiv.style.cssText = `
+            padding: 20px;
+            text-align: center;
+            color: #666;
+            font-style: italic;
+        `;
+        
+        // Create prompt text
+        const promptDiv = document.createElement('div');
+        promptDiv.className = 'image-prompt';
+        promptDiv.innerHTML = `<small><strong>Prompt:</strong> ${prompt}</small>`;
+        promptDiv.style.cssText = `
+            margin-top: 5px;
+            font-size: 0.8em;
+            color: #666;
+            font-style: italic;
+        `;
+        
+        // Assemble the message
+        imageContainer.appendChild(loadingDiv);
+        imageContainer.appendChild(img);
+        messageDiv.appendChild(imageContainer);
+        messageDiv.appendChild(promptDiv);
+        
+        // Initially hide image until loaded
+        img.style.display = 'none';
+        
+        // Remove welcome message if it exists
+        const welcomeMessage = this.chatMessages.querySelector('.welcome-message');
+        if (welcomeMessage) {
+            welcomeMessage.remove();
+        }
+        
+        this.chatMessages.appendChild(messageDiv);
+        this.chatMessages.scrollTop = this.chatMessages.scrollHeight;
+    }
+
+    addRetryMessage(sender, text, retryMethod) {
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `message ${sender}`;
+        
+        const textDiv = document.createElement('div');
+        textDiv.textContent = text;
+        
+        const retryBtn = document.createElement('button');
+        retryBtn.innerHTML = '<i class="fas fa-redo"></i> Tentar Novamente';
+        retryBtn.className = 'retry-btn';
+        retryBtn.style.cssText = `
+            margin-top: 10px;
+            padding: 8px 16px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: background 0.2s;
+        `;
+        
+        retryBtn.onmouseover = () => retryBtn.style.background = '#45a049';
+        retryBtn.onmouseout = () => retryBtn.style.background = '#4CAF50';
+        
+        retryBtn.addEventListener('click', () => {
+            messageDiv.remove();
+            this[retryMethod]();
+        });
+        
+        messageDiv.appendChild(textDiv);
+        messageDiv.appendChild(retryBtn);
         
         // Remove welcome message if it exists
         const welcomeMessage = this.chatMessages.querySelector('.welcome-message');

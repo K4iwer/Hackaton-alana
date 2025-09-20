@@ -17,14 +17,27 @@
         <header class="header">
             <div class="header-left">
                 <h1><i class="fas fa-book-reader"></i> LivrAI</h1>
-                <div class="file-controls">
-                    <select id="pdfSelector" class="pdf-selector">
-                        <option value="">Selecione um PDF...</option>
-                    </select>
-                    <label for="fileUpload" class="upload-btn">
-                        <i class="fas fa-upload"></i> Upload PDF
-                    </label>
-                    <input type="file" id="fileUpload" accept=".pdf" style="display: none;">
+                <select id="pdfSelector" class="pdf-selector">
+                    <option value="">Selecione um PDF...</option>
+                </select>
+                <label for="fileUpload" class="upload-btn">
+                    <i class="fas fa-upload"></i> Upload PDF
+                </label>
+                <input type="file" id="fileUpload" accept=".pdf" style="display: none;">
+                
+                <!-- Layout Controls moved to header -->
+                <div class="layout-controls-header">
+                    <div class="layout-presets-header">
+                        <button id="layoutPdfFocus" class="layout-btn-header" title="Foco no PDF">
+                            <i class="fas fa-file-pdf"></i>
+                        </button>
+                        <button id="layoutBalanced" class="layout-btn-header active" title="Layout Balanceado">
+                            <i class="fas fa-columns"></i>
+                        </button>
+                        <button id="layoutChatFocus" class="layout-btn-header" title="Foco no Chat">
+                            <i class="fas fa-comments"></i>
+                        </button>
+                    </div>
                 </div>
             </div>
             <div class="header-right">
@@ -40,10 +53,11 @@
             </div>
         </header>
 
+
         <!-- Main Content -->
         <main class="main-content">
             <!-- PDF Viewer Section -->
-            <section class="pdf-section">
+            <section class="pdf-section" id="pdfSection">
                 <div class="pdf-controls">
                     <button id="prevPage" disabled><i class="fas fa-chevron-left"></i></button>
                     <span class="page-info">
@@ -76,23 +90,54 @@
                 </div>
             </section>
 
+            <!-- Resizable Divider -->
+            <div class="resize-divider" id="resizeDivider">
+                <div class="resize-handle">
+                    <i class="fas fa-grip-lines-vertical"></i>
+                </div>
+            </div>
+
             <!-- AI Assistant Section -->
-            <section class="ai-section">
+            <section class="ai-section" id="aiSection">
                 <div class="ai-header">
                     <h2><i class="fas fa-robot"></i> Assistente IA</h2>
-                    <div class="ai-tools">
-                        <button id="simplifyBtn" class="tool-btn" disabled>
-                            <i class="fas fa-language"></i> Simplificar Texto
-                        </button>
-                        <button id="generateImageBtn" class="tool-btn" disabled>
-                            <i class="fas fa-image"></i> Gerar Imagem
-                        </button>
-                        <button id="continueSelectionBtn" class="tool-btn" disabled title="Continuar seleção na próxima página (Ctrl+Enter)">
-                            <i class="fas fa-arrow-right"></i> Continuar Seleção
-                        </button>
-                        <button id="historicalContextBtn" class="tool-btn" disabled>
-                            <i class="fas fa-history"></i> Contexto Histórico
-                        </button>
+                    <div class="ai-tools-container">
+                        <div class="ai-tools-scroll" id="aiToolsScroll">
+                            <div class="ai-tools">
+                                <button id="simplifyBtn" class="tool-btn compact" disabled>
+                                    <i class="fas fa-language"></i>
+                                    <span>Simplificar</span>
+                                </button>
+                                <button id="generateImageBtn" class="tool-btn compact" disabled title="Gerar imagem visual do conceito selecionado">
+                                    <i class="fas fa-image"></i>
+                                    <span>Gerar Imagem</span>
+                                </button>
+                                <button id="summarizeBtn" class="tool-btn compact" disabled title="Resumir e explicar o texto selecionado">
+                                    <i class="fas fa-file-text"></i>
+                                    <span>Resumir</span>
+                                </button>
+                                <button id="dictionaryBtn" class="tool-btn compact" disabled title="Buscar significado e sinônimos">
+                                    <i class="fas fa-book"></i>
+                                    <span>Dicionário</span>
+                                </button>
+                                <button id="historicalContextBtn" class="tool-btn compact" disabled>
+                                    <i class="fas fa-history"></i>
+                                    <span>Contexto Histórico</span>
+                                </button>
+                                <button id="continueSelectionBtn" class="tool-btn compact" disabled title="Continuar seleção na próxima página (Ctrl+Enter)">
+                                    <i class="fas fa-arrow-right"></i>
+                                    <span>Continuar Seleção</span>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="tools-navigation">
+                            <button class="nav-btn" id="toolsPrev" title="Anterior">
+                                <i class="fas fa-chevron-left"></i>
+                            </button>
+                            <button class="nav-btn" id="toolsNext" title="Próximo">
+                                <i class="fas fa-chevron-right"></i>
+                            </button>
+                        </div>
                     </div>
                 </div>
                 
@@ -111,7 +156,7 @@
                             <p>Olá! Sou seu assistente de leitura inteligente. Selecione qualquer texto no PDF e eu posso:</p>
                             <ul>
                                 <li>✨ Simplificar textos complexos</li>
-                                <li>🎨 Criar descrições visuais para conceitos</li>
+                                <li>🎨 Gerar imagens visuais dos conceitos</li>
                                 <li>🏛️ Explicar o contexto histórico</li>
                                 <li>💡 Explicar termos difíceis</li>
                                 <li>📚 Resumir seções longas</li>
@@ -135,6 +180,43 @@
         <div class="loading-spinner">
             <i class="fas fa-spinner fa-spin"></i>
             <p>Processando com IA...</p>
+        </div>
+    </div>
+
+    <!-- Selection Popup -->
+    <div id="selectionPopup" class="selection-popup" style="display: none;">
+        <div class="popup-header">
+            <span class="popup-title">🎯 Texto Selecionado</span>
+            <button id="closePopup" class="close-popup-btn">×</button>
+        </div>
+        <div class="popup-actions">
+            <button id="popupSimplifyBtn" class="popup-btn simplify">
+                <i class="fas fa-language"></i>
+                <span>Simplificar</span>
+            </button>
+            <button id="popupGenerateImageBtn" class="popup-btn image">
+                <i class="fas fa-image"></i>
+                <span>Gerar Imagem</span>
+            </button>
+            <button id="popupSummarizeBtn" class="popup-btn summarize">
+                <i class="fas fa-file-text"></i>
+                <span>Resumir</span>
+            </button>
+            <button id="popupDictionaryBtn" class="popup-btn dictionary">
+                <i class="fas fa-book"></i>
+                <span>Dicionário</span>
+            </button>
+            <button id="popupHistoricalContextBtn" class="popup-btn history">
+                <i class="fas fa-history"></i>
+                <span>Contexto Histórico</span>
+            </button>
+            <button id="popupContinueSelectionBtn" class="popup-btn continue">
+                <i class="fas fa-arrow-right"></i>
+                <span>Continuar Seleção</span>
+            </button>
+        </div>
+        <div class="popup-text-preview" id="popupTextPreview">
+            <!-- Preview do texto selecionado -->
         </div>
     </div>
 
