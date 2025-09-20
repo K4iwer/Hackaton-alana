@@ -65,6 +65,7 @@ class AIPDFReader {
         // Loading elements
         this.loadingOverlay = document.getElementById('loadingOverlay');
         this.loadingMessage = document.getElementById('loadingMessage');
+        this.initialMessage = document.getElementById('loadingMessage');
     }
 
     setupEventListeners() {
@@ -141,6 +142,13 @@ class AIPDFReader {
             await this.renderPage();
             this.updateControls();
             this.hideLoading();
+            
+            // Hide the initial message and show canvas when PDF is loaded
+            if (this.initialMessage) {
+                this.initialMessage.style.display = 'none';
+            }
+            // Show the canvas
+            this.canvas.style.display = 'block';
         } catch (error) {
             console.error('Error loading PDF:', error);
             this.hideLoading();
@@ -169,6 +177,13 @@ class AIPDFReader {
                 await this.loadAvailablePDFs();
                 this.pdfSelector.value = file.name;
                 await this.loadSelectedPDF(file.name);
+                
+                // Hide the initial message and show canvas when PDF is uploaded and loaded
+                if (this.initialMessage) {
+                    this.initialMessage.style.display = 'none';
+                }
+                // Show the canvas
+                this.canvas.style.display = 'block';
             } else {
                 throw new Error('Upload failed');
             }

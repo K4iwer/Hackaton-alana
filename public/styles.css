@@ -248,6 +248,7 @@ body {
     border-radius: 8px;
     background: white;
     cursor: text;
+    display: none; /* Inicialmente invisível */
 }
 
 .text-layer {
@@ -288,9 +289,14 @@ body {
 }
 
 .loading-message {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
     text-align: center;
     color: #6b7280;
     font-size: 1.1rem;
+    width: 100%;
 }
 
 .loading-message i {
