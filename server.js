@@ -126,12 +126,52 @@ ${text}
   }
 });
 
+// AI historical context endpoint
+app.post('/api/historical-context', async (req, res) => {
+  try {
+    const { text } = req.body;
+    
+    if (!process.env.GEMINI_API_KEY) {
+      return res.status(500).json({ 
+        error: 'Gemini API key not configured. Please add GEMINI_API_KEY to your .env file.' 
+      });
+    }
+
+    const userPrompt = `Analise o seguinte texto e forneça o contexto histórico relevante. Explique:
+
+1. **Período Histórico**: Em que época isso aconteceu ou se desenvolveu?
+2. **Contexto Social e Político**: Qual era a situação da sociedade e política na época?
+3. **Antecedentes**: O que levou a essa situação ou desenvolvimento?
+4. **Consequências**: Qual foi o impacto histórico deste evento/conceito?
+5. **Relevância Atual**: Por que isso ainda é importante hoje?
+6. **Escola Literária**: Esse texto pertence a qual escola literária, e quais características do texto são relevantes para essa escola?
+
+Texto para análise:
+"""
+${text}
+"""
+
+Forneça uma explicação clara, didática e bem estruturada em português brasileiro.`;
+
+    const historicalContext = await callGeminiGenerateContent(userPrompt);
+    res.json({ historicalContext });
+  } catch (error) {
+    console.error('Error calling Gemini API:', error.response?.data || error.message);
+    const status = error.response?.status || 500;
+    const apiMsg = error.response?.data?.error?.message;
+    res.status(status).json({ 
+      error: apiMsg || 'Failed to generate historical context. Please check your API key and try again.' 
+    });
+  }
+});
+
 app.listen(PORT, () => {
   console.log(`🚀 AI PDF Reader server running on http://localhost:${PORT}`);
   console.log('📚 Available features:');
   console.log('  - PDF viewing with zoom and navigation');
   console.log('  - AI text simplification');
   console.log('  - AI image generation for concepts');
+  console.log('  - AI historical context analysis');
   console.log('  - Accessibility controls (font size, brightness)');
   console.log('  - Text selection and highlighting');
 });
