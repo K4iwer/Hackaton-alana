@@ -17,6 +17,7 @@ class AIPDFReader {
         this.initializeElements();
         this.setupEventListeners();
         this.loadAvailablePDFs();
+        this.checkForSelectedBook();
     }
 
     initializeElements() {
@@ -619,6 +620,20 @@ class AIPDFReader {
 
     hideLoading() {
         this.loadingOverlay.style.display = 'none';
+    }
+
+    // Check for selected book from URL parameters
+    checkForSelectedBook() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const selectedBook = urlParams.get('book');
+        
+        if (selectedBook) {
+            // Wait a bit for the PDF list to load, then select the book
+            setTimeout(() => {
+                this.pdfSelector.value = selectedBook;
+                this.loadSelectedPDF(selectedBook);
+            }, 500);
+        }
     }
 }
 
