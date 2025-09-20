@@ -382,7 +382,7 @@ class AIPDFReader {
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ text: this.selectedText })
+                body: JSON.stringify({ text: `Simplifique o seguinte texto removido de um livro para o português de forma clara e objetiva, mantendo o significado original: ${this.selectedText}` })
             });
 
             const data = await response.json();
