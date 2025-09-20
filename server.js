@@ -33,6 +33,16 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
+// Route for the main application
+app.get('/app', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'app.html'));
+});
+
+// Route for login page (placeholder for now)
+app.get('/login', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'login.html'));
+});
+
 // Get list of available PDFs
 app.get('/api/pdfs', (req, res) => {
   const fs = require('fs');

@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - LivrAI</title>
+    <link rel="stylesheet" href="login.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="login-container">
+        <!-- Background Animation -->
+        <div class="background-animation">
+            <div class="floating-element"></div>
+            <div class="floating-element"></div>
+            <div class="floating-element"></div>
+        </div>
+
+        <!-- Login Form -->
+        <div class="login-form-container">
+            <!-- Header -->
+            <div class="login-header">
+                <div class="logo">
+                    <i class="fas fa-book-reader"></i>
+                    <h1>LivrAI</h1>
+                </div>
+                <p class="subtitle">Faça login para acessar sua biblioteca inteligente</p>
+            </div>
+
+            <!-- Form -->
+            <form class="login-form" id="loginForm">
+                <div class="form-group">
+                    <label for="email">
+                        <i class="fas fa-envelope"></i>
+                        Email
+                    </label>
+                    <input type="email" id="email" name="email" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="password">
+                        <i class="fas fa-lock"></i>
+                        Senha
+                    </label>
+                    <input type="password" id="password" name="password" required>
+                </div>
+
+                <div class="form-options">
+                    <label class="checkbox-container">
+                        <input type="checkbox" id="rememberMe">
+                        <span class="checkmark"></span>
+                        Lembrar de mim
+                    </label>
+                    <a href="#" class="forgot-password">Esqueceu a senha?</a>
+                </div>
+
+                <button type="submit" class="login-btn">
+                    <i class="fas fa-sign-in-alt"></i>
+                    Entrar
+                </button>
+            </form>
+
+            <!-- Divider -->
+            <div class="divider">
+                <span>ou</span>
+            </div>
+
+            <!-- Demo Access -->
+            <button class="demo-btn" onclick="accessDemo()">
+                <i class="fas fa-play"></i>
+                Acessar Demonstração
+            </button>
+
+            <!-- Footer -->
+            <div class="login-footer">
+                <p>Não tem uma conta? <a href="#" onclick="showRegister()">Cadastre-se</a></p>
+                <p><a href="/" class="back-home"><i class="fas fa-arrow-left"></i> Voltar ao início</a></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay" style="display: none;">
+        <div class="loading-spinner">
+            <i class="fas fa-spinner fa-spin"></i>
+            <p>Entrando...</p>
+        </div>
+    </div>
+
+    <script>
+        // Form submission handler
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            // Show loading
+            document.getElementById('loadingOverlay').style.display = 'flex';
+            
+            // Simulate login process (replace with actual authentication)
+            setTimeout(() => {
+                // For demo purposes, accept any email/password
+                if (email && password) {
+                    // Redirect to main application
+                    window.location.href = '/app';
+                } else {
+                    document.getElementById('loadingOverlay').style.display = 'none';
+                    alert('Por favor, preencha todos os campos.');
+                }
+            }, 1500);
+        });
+
+        // Demo access function
+        function accessDemo() {
+            document.getElementById('loadingOverlay').style.display = 'flex';
+            setTimeout(() => {
+                window.location.href = '/app';
+            }, 1000);
+        }
+
+        // Show register function (placeholder)
+        function showRegister() {
+            alert('Funcionalidade de cadastro será implementada em breve!');
+        }
+
+        // Add floating animation
+        document.addEventListener('DOMContentLoaded', function() {
+            const floatingElements = document.querySelectorAll('.floating-element');
+            floatingElements.forEach((element, index) => {
+                element.style.animationDelay = `${index * 1}s`;
+            });
+        });
+    </script>
+</body>
+</html>
