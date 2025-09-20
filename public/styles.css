@@ -580,3 +580,104 @@ body {
 ::-webkit-scrollbar-thumb:hover {
     background: #a1a1a1;
 }
+
+/* Multi-page Selection Styles */
+.multi-page-selection {
+    background-color: rgba(255, 235, 59, 0.6) !important;
+    border: 1px solid #FFC107;
+    border-radius: 2px;
+    box-shadow: 0 0 3px rgba(255, 193, 7, 0.5);
+    position: relative;
+}
+
+.multi-page-selection::before {
+    content: "📄";
+    position: absolute;
+    top: -15px;
+    left: -5px;
+    font-size: 12px;
+    background: #FFC107;
+    color: white;
+    padding: 2px 4px;
+    border-radius: 3px;
+    font-weight: bold;
+    z-index: 10;
+}
+
+.selection-hint {
+    animation: slideInDown 0.3s ease-out;
+}
+
+@keyframes slideInDown {
+    from {
+        transform: translateX(-50%) translateY(-20px);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(-50%) translateY(0);
+        opacity: 1;
+    }
+}
+
+/* Enhanced Selected Text Display */
+.selected-text-display {
+    border-left: 4px solid #4CAF50;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+}
+
+.selected-text-display h3 {
+    color: #2e7d32;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.selected-text-display h3::before {
+    content: "📝";
+    font-size: 1.2em;
+}
+
+/* Multi-page indicator in selected text */
+.selected-text-display strong {
+    color: #FF6B35;
+    font-size: 0.9em;
+    background: rgba(255, 107, 53, 0.1);
+    padding: 2px 6px;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 107, 53, 0.3);
+}
+
+/* Keyboard shortcut hints */
+.keyboard-hints {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 10px 15px;
+    border-radius: 8px;
+    font-size: 0.8em;
+    z-index: 1000;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.keyboard-hints.show {
+    opacity: 1;
+}
+
+.keyboard-hints .shortcut {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 4px 0;
+}
+
+.keyboard-hints .key {
+    background: #333;
+    padding: 2px 6px;
+    border-radius: 3px;
+    border: 1px solid #555;
+    font-family: monospace;
+    font-size: 0.9em;
+}

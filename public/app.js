@@ -13,6 +13,17 @@ class AIPDFReader {
         this.searchQuery = '';
         this.searchMatches = [];
         this.currentMatchIndex = -1;
+        // Multi-page selection state
+        this.multiPageSelection = {
+            isActive: false,
+            startPage: null,
+            endPage: null,
+            startOffset: null,
+            endOffset: null,
+            selectedPages: new Map(), // page -> selected text
+            totalText: ''
+        };
+        this.isExtendingSelection = false;
         
         this.initializeElements();
         this.setupEventListeners();
@@ -51,12 +62,16 @@ class AIPDFReader {
         // AI elements
         this.simplifyBtn = document.getElementById('simplifyBtn');
         this.generateImageBtn = document.getElementById('generateImageBtn');
+        this.continueSelectionBtn = document.getElementById('continueSelectionBtn');
         this.selectedTextDisplay = document.getElementById('selectedTextDisplay');
         this.selectedTextContent = document.getElementById('selectedTextContent');
         this.clearSelectionBtn = document.getElementById('clearSelection');
         this.chatMessages = document.getElementById('chatMessages');
         this.chatInput = document.getElementById('chatInput');
         this.sendMessageBtn = document.getElementById('sendMessage');
+        
+        // UI elements
+        this.keyboardHints = document.getElementById('keyboardHints');
         // Enable chat by default (chat can work with or without selection)
         if (this.chatInput) this.chatInput.disabled = false;
         if (this.sendMessageBtn) this.sendMessageBtn.disabled = false;
@@ -97,6 +112,7 @@ class AIPDFReader {
         // AI controls
         this.simplifyBtn.addEventListener('click', () => this.simplifySelectedText());
         this.generateImageBtn.addEventListener('click', () => this.generateImageDescription());
+        this.continueSelectionBtn.addEventListener('click', () => this.continueSelectionOnNextPage());
         this.clearSelectionBtn.addEventListener('click', () => this.clearSelection());
         this.sendMessageBtn.addEventListener('click', () => this.sendMessage());
         this.chatInput.addEventListener('keypress', (e) => {
@@ -105,6 +121,18 @@ class AIPDFReader {
         
         // Text selection
         document.addEventListener('mouseup', () => this.handleTextSelection());
+        document.addEventListener('mousedown', (e) => this.handleSelectionStart(e));
+        
+        // Keyboard shortcuts for multi-page selection
+        document.addEventListener('keydown', (e) => {
+            if (e.ctrlKey && e.key === 'Enter') {
+                e.preventDefault();
+                this.continueSelectionOnNextPage();
+            }
+            if (e.key === 'Escape') {
+                this.clearMultiPageSelection();
+            }
+        });
     }
 
     async loadAvailablePDFs() {
@@ -199,6 +227,8 @@ class AIPDFReader {
         this.renderTextLayer(textContent, viewport);
         // Re-apply search highlights after rendering the page
         this.applySearchHighlights();
+        // Restore multi-page selection highlights
+        this.restoreMultiPageSelection();
     }
 
     renderTextLayer(textContent, viewport) {
@@ -349,27 +379,198 @@ class AIPDFReader {
         return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     }
 
+    handleSelectionStart(e) {
+        // Check if user is holding Shift to extend selection across pages
+        if (e.shiftKey && this.multiPageSelection.isActive) {
+            this.isExtendingSelection = true;
+        }
+    }
+
     handleTextSelection() {
         const selection = window.getSelection();
         const selectedText = selection.toString().trim();
         
         if (selectedText && selectedText.length > 0) {
-            this.selectedText = selectedText;
-            this.selectedTextContent.textContent = selectedText;
-            this.selectedTextDisplay.style.display = 'block';
-            this.simplifyBtn.disabled = false;
-            this.generateImageBtn.disabled = false;
-            this.chatInput.disabled = false;
-            this.sendMessageBtn.disabled = false;
+            if (this.isExtendingSelection) {
+                // Extending existing multi-page selection
+                this.extendMultiPageSelection(selectedText);
+            } else {
+                // New selection
+                this.selectedText = selectedText;
+                this.selectedTextContent.textContent = selectedText;
+                this.selectedTextDisplay.style.display = 'block';
+                this.simplifyBtn.disabled = false;
+                this.generateImageBtn.disabled = false;
+                this.chatInput.disabled = false;
+                this.sendMessageBtn.disabled = false;
+                this.continueSelectionBtn.disabled = false;
+                
+                // Initialize multi-page selection
+                this.initializeMultiPageSelection(selectedText);
+            }
+        }
+        
+        this.isExtendingSelection = false;
+    }
+
+    initializeMultiPageSelection(selectedText) {
+        this.multiPageSelection = {
+            isActive: true,
+            startPage: this.currentPage,
+            endPage: this.currentPage,
+            selectedPages: new Map(),
+            totalText: selectedText
+        };
+        
+        this.multiPageSelection.selectedPages.set(this.currentPage, selectedText);
+        this.updateSelectionIndicator();
+        this.showKeyboardHints();
+    }
+
+    extendMultiPageSelection(newText) {
+        if (!this.multiPageSelection.isActive) return;
+        
+        this.multiPageSelection.endPage = this.currentPage;
+        this.multiPageSelection.selectedPages.set(this.currentPage, newText);
+        
+        // Combine all selected text from all pages
+        let combinedText = '';
+        for (let page = this.multiPageSelection.startPage; page <= this.multiPageSelection.endPage; page++) {
+            const pageText = this.multiPageSelection.selectedPages.get(page);
+            if (pageText) {
+                combinedText += (combinedText ? ' ' : '') + pageText;
+            }
+        }
+        
+        this.selectedText = combinedText;
+        this.multiPageSelection.totalText = combinedText;
+        this.selectedTextContent.innerHTML = combinedText;
+        this.updateSelectionIndicator();
+    }
+
+    continueSelectionOnNextPage() {
+        if (!this.multiPageSelection.isActive || this.currentPage >= this.pdfDoc.numPages) {
+            return;
+        }
+        
+        // Go to next page and prepare for selection
+        this.nextPage().then(() => {
+            this.isExtendingSelection = true;
+            this.showSelectionHint();
+        });
+    }
+
+    restoreMultiPageSelection() {
+        if (!this.multiPageSelection.isActive) return;
+        
+        const currentPageText = this.multiPageSelection.selectedPages.get(this.currentPage);
+        if (currentPageText) {
+            // Highlight the selected text on current page
+            this.highlightTextOnCurrentPage(currentPageText);
         }
     }
 
+    highlightTextOnCurrentPage(textToHighlight) {
+        // Find and highlight the text in the current text layer
+        const spans = Array.from(this.textLayer.querySelectorAll('span'));
+        const words = textToHighlight.split(/\s+/);
+        
+        let matchingSpans = [];
+        let currentWordIndex = 0;
+        
+        for (const span of spans) {
+            const spanText = span.textContent.trim();
+            if (spanText && currentWordIndex < words.length) {
+                if (spanText.includes(words[currentWordIndex]) || words[currentWordIndex].includes(spanText)) {
+                    matchingSpans.push(span);
+                    currentWordIndex++;
+                }
+            }
+        }
+        
+        // Apply highlight style
+        matchingSpans.forEach(span => {
+            span.classList.add('multi-page-selection');
+        });
+    }
+
+    updateSelectionIndicator() {
+        // Update the selected text display with page information
+        if (this.multiPageSelection.isActive && this.multiPageSelection.startPage !== this.multiPageSelection.endPage) {
+            const pageInfo = `(Páginas ${this.multiPageSelection.startPage}-${this.multiPageSelection.endPage})`;
+            this.selectedTextContent.innerHTML = `<strong>${pageInfo}</strong><br>${this.multiPageSelection.totalText}`;
+        }
+    }
+
+    showSelectionHint() {
+        // Show a temporary hint to the user
+        const hint = document.createElement('div');
+        hint.className = 'selection-hint';
+        hint.innerHTML = '<i class="fas fa-hand-pointer"></i> Selecione o texto para continuar a seleção da página anterior';
+        hint.style.cssText = `
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            z-index: 1000;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        `;
+        
+        document.body.appendChild(hint);
+        
+        setTimeout(() => {
+            if (hint.parentNode) {
+                hint.parentNode.removeChild(hint);
+            }
+        }, 3000);
+    }
+
     clearSelection() {
+        this.clearMultiPageSelection();
         this.selectedText = '';
         this.selectedTextDisplay.style.display = 'none';
         this.simplifyBtn.disabled = true;
         this.generateImageBtn.disabled = true;
+        this.continueSelectionBtn.disabled = true;
+        this.hideKeyboardHints();
         window.getSelection().removeAllRanges();
+    }
+
+    clearMultiPageSelection() {
+        // Clear multi-page selection highlights
+        const highlights = document.querySelectorAll('.multi-page-selection');
+        highlights.forEach(el => el.classList.remove('multi-page-selection'));
+        
+        // Reset multi-page selection state
+        this.multiPageSelection = {
+            isActive: false,
+            startPage: null,
+            endPage: null,
+            selectedPages: new Map(),
+            totalText: ''
+        };
+        
+        this.isExtendingSelection = false;
+    }
+
+    showKeyboardHints() {
+        if (this.keyboardHints) {
+            this.keyboardHints.classList.add('show');
+            // Auto-hide after 5 seconds
+            setTimeout(() => {
+                this.hideKeyboardHints();
+            }, 5000);
+        }
+    }
+
+    hideKeyboardHints() {
+        if (this.keyboardHints) {
+            this.keyboardHints.classList.remove('show');
+        }
     }
 
     async simplifySelectedText() {

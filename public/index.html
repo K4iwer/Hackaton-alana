@@ -87,6 +87,9 @@
                         <button id="generateImageBtn" class="tool-btn" disabled>
                             <i class="fas fa-image"></i> Gerar Imagem
                         </button>
+                        <button id="continueSelectionBtn" class="tool-btn" disabled title="Continuar seleção na próxima página (Ctrl+Enter)">
+                            <i class="fas fa-arrow-right"></i> Continuar Seleção
+                        </button>
                     </div>
                 </div>
                 
@@ -128,6 +131,22 @@
         <div class="loading-spinner">
             <i class="fas fa-spinner fa-spin"></i>
             <p>Processando com IA...</p>
+        </div>
+    </div>
+
+    <!-- Keyboard Shortcuts Hints -->
+    <div id="keyboardHints" class="keyboard-hints">
+        <div class="shortcut">
+            <span class="key">Ctrl</span> + <span class="key">Enter</span>
+            <span>Continuar seleção na próxima página</span>
+        </div>
+        <div class="shortcut">
+            <span class="key">Shift</span> + <span>Clique</span>
+            <span>Estender seleção</span>
+        </div>
+        <div class="shortcut">
+            <span class="key">Esc</span>
+            <span>Limpar seleção multi-página</span>
         </div>
     </div>
 
