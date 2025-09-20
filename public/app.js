@@ -9,6 +9,10 @@ class AIPDFReader {
         this.selectedText = '';
         this.fontSize = 100;
         this.brightness = 100;
+        // Search state
+        this.searchQuery = '';
+        this.searchMatches = [];
+        this.currentMatchIndex = -1;
         
         this.initializeElements();
         this.setupEventListeners();
@@ -31,6 +35,12 @@ class AIPDFReader {
         this.zoomInBtn = document.getElementById('zoomIn');
         this.zoomOutBtn = document.getElementById('zoomOut');
         this.zoomLevelSpan = document.getElementById('zoomLevel');
+        // Search elements
+        this.searchInput = document.getElementById('searchInput');
+        this.searchPrevBtn = document.getElementById('searchPrev');
+        this.searchNextBtn = document.getElementById('searchNext');
+        this.searchClearBtn = document.getElementById('searchClear');
+        this.searchCountSpan = document.getElementById('searchCount');
         
         // Accessibility elements
         this.increaseFontBtn = document.getElementById('increaseFontSize');
@@ -47,6 +57,9 @@ class AIPDFReader {
         this.chatMessages = document.getElementById('chatMessages');
         this.chatInput = document.getElementById('chatInput');
         this.sendMessageBtn = document.getElementById('sendMessage');
+        // Enable chat by default (chat can work with or without selection)
+        if (this.chatInput) this.chatInput.disabled = false;
+        if (this.sendMessageBtn) this.sendMessageBtn.disabled = false;
         
         // Loading elements
         this.loadingOverlay = document.getElementById('loadingOverlay');
@@ -62,6 +75,19 @@ class AIPDFReader {
         this.currentPageInput.addEventListener('change', (e) => this.goToPage(parseInt(e.target.value)));
         this.zoomInBtn.addEventListener('click', () => this.zoomIn());
         this.zoomOutBtn.addEventListener('click', () => this.zoomOut());
+        
+        // Search controls
+        if (this.searchInput) {
+            this.searchInput.addEventListener('input', () => this.runSearch());
+            this.searchInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    this.goToMatch(1);
+                }
+            });
+        }
+        if (this.searchPrevBtn) this.searchPrevBtn.addEventListener('click', () => this.goToMatch(-1));
+        if (this.searchNextBtn) this.searchNextBtn.addEventListener('click', () => this.goToMatch(1));
+        if (this.searchClearBtn) this.searchClearBtn.addEventListener('click', () => this.clearSearch());
         
         // Accessibility controls
         this.increaseFontBtn.addEventListener('click', () => this.changeFontSize(10));
@@ -95,6 +121,8 @@ class AIPDFReader {
             });
         } catch (error) {
             console.error('Error loading PDFs:', error);
+            // Inform the user clearly if the server is not running
+            this.addMessage('ai', '⚠️ Não consegui conectar ao servidor. Certifique-se de que ele está em execução (npm start) e acesse via http://localhost:3000, não abrindo o arquivo HTML diretamente.');
         }
     }
 
@@ -169,6 +197,8 @@ class AIPDFReader {
         // Render text layer for selection
         const textContent = await page.getTextContent();
         this.renderTextLayer(textContent, viewport);
+        // Re-apply search highlights after rendering the page
+        this.applySearchHighlights();
     }
 
     renderTextLayer(textContent, viewport) {
@@ -196,6 +226,127 @@ class AIPDFReader {
             
             this.textLayer.appendChild(textDiv);
         });
+    }
+
+    // ========== Search ==========
+    runSearch() {
+        const query = (this.searchInput?.value || '').trim();
+        this.searchQuery = query;
+
+        // Clear previous highlights on current text layer
+        this.clearSearchHighlightsOnly();
+
+        if (!query) {
+            this.searchMatches = [];
+            this.currentMatchIndex = -1;
+            this.updateSearchUI();
+            return;
+        }
+
+        // Apply new highlights on current page
+        this.applySearchHighlights();
+    }
+
+    applySearchHighlights() {
+        if (!this.searchQuery) {
+            this.updateSearchUI();
+            return;
+        }
+        const regex = new RegExp(this.escapeRegExp(this.searchQuery), 'gi');
+        this.searchMatches = [];
+        this.currentMatchIndex = -1;
+
+        // Walk all text spans inside the text layer
+        const spans = Array.from(this.textLayer.querySelectorAll('span'));
+        for (const span of spans) {
+            const text = span.textContent;
+            if (!text) continue;
+            if (!regex.test(text)) {
+                // Reset lastIndex if used previously
+                regex.lastIndex = 0;
+                continue;
+            }
+            // Reset lastIndex before splitting
+            regex.lastIndex = 0;
+            const parts = text.split(new RegExp(`(${this.escapeRegExp(this.searchQuery)})`, 'gi'));
+            // Rebuild span content with highlights
+            span.innerHTML = '';
+            for (const part of parts) {
+                if (!part) continue;
+                if (part.toLowerCase() === this.searchQuery.toLowerCase()) {
+                    const mark = document.createElement('span');
+                    mark.className = 'search-mark';
+                    mark.textContent = part;
+                    span.appendChild(mark);
+                    this.searchMatches.push(mark);
+                } else {
+                    span.appendChild(document.createTextNode(part));
+                }
+            }
+        }
+
+        if (this.searchMatches.length > 0) {
+            this.currentMatchIndex = 0;
+            this.setActiveMatch(this.currentMatchIndex);
+        }
+        this.updateSearchUI();
+    }
+
+    clearSearch() {
+        this.searchQuery = '';
+        if (this.searchInput) this.searchInput.value = '';
+        this.clearSearchHighlightsOnly();
+        this.searchMatches = [];
+        this.currentMatchIndex = -1;
+        this.updateSearchUI();
+    }
+
+    clearSearchHighlightsOnly() {
+        // Unwrap existing search marks on current page
+        const marks = Array.from(this.textLayer.querySelectorAll('.search-mark'));
+        for (const mark of marks) {
+            const parent = mark.parentNode;
+            parent.replaceChild(document.createTextNode(mark.textContent), mark);
+            parent.normalize();
+        }
+    }
+
+    goToMatch(direction) {
+        if (this.searchMatches.length === 0) return;
+        this.currentMatchIndex = (this.currentMatchIndex + direction + this.searchMatches.length) % this.searchMatches.length;
+        this.setActiveMatch(this.currentMatchIndex);
+        this.scrollActiveIntoView();
+        this.updateSearchUI();
+    }
+
+    setActiveMatch(index) {
+        this.searchMatches.forEach((el, i) => {
+            if (i === index) el.classList.add('active');
+            else el.classList.remove('active');
+        });
+    }
+
+    scrollActiveIntoView() {
+        const el = this.searchMatches[this.currentMatchIndex];
+        if (!el) return;
+        el.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
+    }
+
+    updateSearchUI() {
+        if (this.searchCountSpan) {
+            const total = this.searchMatches.length;
+            const idx = total > 0 ? (this.currentMatchIndex + 1) : 0;
+            this.searchCountSpan.textContent = `${idx}/${total}`;
+        }
+        const hasQuery = !!this.searchQuery;
+        const hasMatches = this.searchMatches.length > 0;
+        if (this.searchPrevBtn) this.searchPrevBtn.disabled = !hasMatches;
+        if (this.searchNextBtn) this.searchNextBtn.disabled = !hasMatches;
+        if (this.searchClearBtn) this.searchClearBtn.disabled = !hasQuery;
+    }
+
+    escapeRegExp(string) {
+        return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     }
 
     handleTextSelection() {
@@ -244,7 +395,12 @@ class AIPDFReader {
             }
         } catch (error) {
             console.error('Error simplifying text:', error);
-            this.addMessage('ai', 'Desculpe, ocorreu um erro ao simplificar o texto. Verifique se a chave da API está configurada corretamente.');
+            const offline = error?.message?.toLowerCase?.().includes('failed') || error?.name === 'TypeError';
+            if (offline) {
+                this.addMessage('ai', '⚠️ Falha ao conectar ao servidor. Verifique se o servidor está rodando com "npm start" e tente novamente.');
+            } else {
+                this.addMessage('ai', 'Desculpe, ocorreu um erro ao simplificar o texto. Verifique se a chave da API do Gemini está configurada no arquivo .env e reinicie o servidor.');
+            }
         } finally {
             this.hideLoading();
         }
@@ -273,7 +429,12 @@ class AIPDFReader {
             }
         } catch (error) {
             console.error('Error generating image description:', error);
-            this.addMessage('ai', 'Desculpe, ocorreu um erro ao gerar a descrição da imagem. Verifique se a chave da API está configurada corretamente.');
+            const offline = error?.message?.toLowerCase?.().includes('failed') || error?.name === 'TypeError';
+            if (offline) {
+                this.addMessage('ai', '⚠️ Falha ao conectar ao servidor. Verifique se o servidor está rodando com "npm start" e tente novamente.');
+            } else {
+                this.addMessage('ai', 'Desculpe, ocorreu um erro ao gerar a descrição da imagem. Verifique se a chave da API do Gemini está configurada no arquivo .env e reinicie o servidor.');
+            }
         } finally {
             this.hideLoading();
         }
@@ -312,7 +473,12 @@ class AIPDFReader {
             }
         } catch (error) {
             console.error('Error sending message:', error);
-            this.addMessage('ai', 'Desculpe, ocorreu um erro ao processar sua mensagem. Verifique se a chave da API está configurada corretamente.');
+            const offline = error?.message?.toLowerCase?.().includes('failed') || error?.name === 'TypeError';
+            if (offline) {
+                this.addMessage('ai', '⚠️ Não consegui comunicar com o servidor. Inicie o servidor com "npm start" e acesse via http://localhost:3000.');
+            } else {
+                this.addMessage('ai', 'Desculpe, ocorreu um erro ao processar sua mensagem. Verifique se a chave da API do Gemini está configurada corretamente no arquivo .env e reinicie o servidor.');
+            }
         } finally {
             this.hideLoading();
         }

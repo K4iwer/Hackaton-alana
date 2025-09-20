@@ -200,6 +200,38 @@ body {
     gap: 0.5rem;
 }
 
+.search-controls {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-left: 1rem;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    padding: 0.25rem 0.5rem;
+    border-radius: 8px;
+}
+
+.search-controls i {
+    color: #6b7280;
+}
+
+.search-controls input[type="text"] {
+    width: 220px;
+    padding: 0.4rem 0.6rem;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    font-size: 0.9rem;
+}
+
+.search-controls .search-count {
+    font-size: 0.85rem;
+    color: #6b7280;
+}
+
+.search-controls button {
+    padding: 0.4rem 0.6rem;
+}
+
 .pdf-viewer-container {
     flex: 1;
     position: relative;
@@ -240,6 +272,19 @@ body {
 .text-layer .highlight {
     background-color: rgba(79, 70, 229, 0.3);
     color: transparent;
+}
+
+/* Search highlight marks inside text layer */
+.text-layer .search-mark {
+    background: rgba(250, 204, 21, 0.8); /* amber-400 */
+    color: transparent;
+    outline: 2px solid rgba(251, 191, 36, 0.9);
+    outline-offset: 1px;
+}
+
+.text-layer .search-mark.active {
+    background: rgba(59, 130, 246, 0.85); /* blue-500 */
+    outline-color: rgba(59, 130, 246, 1);
 }
 
 .loading-message {
