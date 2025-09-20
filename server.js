@@ -7,6 +7,7 @@ require('dotenv').config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-1.5-flash';
 
 // Middleware
 app.use(cors());
@@ -52,6 +53,23 @@ app.post('/api/upload', upload.single('pdf'), (req, res) => {
   res.json({ message: 'File uploaded successfully', filename: req.file.filename });
 });
 
+// Helper to call Gemini
+async function callGeminiGenerateContent(userText) {
+  const url = `https://generativelanguage.googleapis.com/v1/models/${encodeURIComponent(GEMINI_MODEL)}:generateContent?key=${process.env.GEMINI_API_KEY}`;
+  const payload = {
+    contents: [
+      {
+        role: 'user',
+        parts: [{ text: userText }]
+      }
+    ]
+  };
+  const { data } = await axios.post(url, payload, { headers: { 'Content-Type': 'application/json' } });
+  // Join all parts text safely
+  const text = data?.candidates?.[0]?.content?.parts?.map(p => p.text).join('') || '';
+  return text;
+}
+
 // AI text simplification endpoint
 app.post('/api/simplify', async (req, res) => {
   try {
@@ -63,28 +81,19 @@ app.post('/api/simplify', async (req, res) => {
       });
     }
 
-    const response = await axios.post(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${process.env.GEMINI_API_KEY}`,
-      {
-        contents: [{
-          parts: [{
-            text: prompt || `Please simplify the following text to make it easier to understand, using simpler words and shorter sentences while keeping the original meaning: "${text}"`
-          }]
-        }]
-      },
-      {
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      }
-    );
+    const userPrompt = prompt || `Rewrite the following text using simple language, short sentences, and clear vocabulary, while preserving the original meaning:
+"""
+${text}
+"""`;
 
-    const simplifiedText = response.data.candidates[0].content.parts[0].text;
+    const simplifiedText = await callGeminiGenerateContent(userPrompt);
     res.json({ simplifiedText });
   } catch (error) {
     console.error('Error calling Gemini API:', error.response?.data || error.message);
-    res.status(500).json({ 
-      error: 'Failed to simplify text. Please check your API key and try again.' 
+    const status = error.response?.status || 500;
+    const apiMsg = error.response?.data?.error?.message;
+    res.status(status).json({ 
+      error: apiMsg || 'Failed to simplify text. Please check your API key and try again.' 
     });
   }
 });
@@ -100,28 +109,19 @@ app.post('/api/generate-image', async (req, res) => {
       });
     }
 
-    const response = await axios.post(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${process.env.GEMINI_API_KEY}`,
-      {
-        contents: [{
-          parts: [{
-            text: `Based on this text, create a detailed description for an image that would help visualize and understand the concept: "${text}". Provide a clear, descriptive prompt for image generation.`
-          }]
-        }]
-      },
-      {
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      }
-    );
+    const userPrompt = `Create a clear, visual, and descriptive image prompt that would help a student understand the following concept. Focus on concrete elements, setting, composition, and style suggestions. Text:
+"""
+${text}
+"""`;
 
-    const imageDescription = response.data.candidates[0].content.parts[0].text;
+    const imageDescription = await callGeminiGenerateContent(userPrompt);
     res.json({ imageDescription });
   } catch (error) {
     console.error('Error calling Gemini API:', error.response?.data || error.message);
-    res.status(500).json({ 
-      error: 'Failed to generate image description. Please check your API key and try again.' 
+    const status = error.response?.status || 500;
+    const apiMsg = error.response?.data?.error?.message;
+    res.status(status).json({ 
+      error: apiMsg || 'Failed to generate image description. Please check your API key and try again.' 
     });
   }
 });
