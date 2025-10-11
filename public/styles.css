@@ -266,11 +266,16 @@ body {
 .pdf-controls {
     display: flex;
     align-items: center;
-    justify-content: center;
+    justify-content: flex-start;
     gap: 1rem;
-    padding: 1rem;
+    padding: 0.75rem;
     background: #f8fafc;
     border-bottom: 1px solid #e2e8f0;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    flex-wrap: nowrap;
+    min-height: 60px;
 }
 
 .pdf-controls button {
@@ -283,6 +288,7 @@ body {
     display: flex;
     align-items: center;
     gap: 0.5rem;
+    flex-shrink: 0;
 }
 
 .pdf-controls button:hover:not(:disabled) {
@@ -301,6 +307,8 @@ body {
     align-items: center;
     gap: 0.5rem;
     font-weight: 500;
+    white-space: nowrap;
+    flex-shrink: 0;
 }
 
 .page-info input {
@@ -315,17 +323,23 @@ body {
     display: flex;
     align-items: center;
     gap: 0.5rem;
+    white-space: nowrap;
+    flex-shrink: 0;
 }
 
 .search-controls {
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    margin-left: 1rem;
+    margin-left: auto;
     background: #ffffff;
     border: 1px solid #e2e8f0;
     padding: 0.25rem 0.5rem;
     border-radius: 8px;
+    flex-shrink: 1;
+    min-width: 0;
+    overflow: hidden;
+    transition: all 0.3s ease;
 }
 
 .search-controls i {
@@ -334,10 +348,12 @@ body {
 
 .search-controls input[type="text"] {
     width: 220px;
+    min-width: 100px;
     padding: 0.4rem 0.6rem;
     border: 1px solid #e5e7eb;
     border-radius: 6px;
     font-size: 0.9rem;
+    flex-shrink: 1;
 }
 
 .search-controls .search-count {
@@ -358,6 +374,7 @@ body {
     justify-content: center;
     align-items: flex-start;
     padding: 2rem;
+    scroll-padding-top: 60px;
 }
 
 #pdfCanvas {
@@ -533,6 +550,20 @@ body {
 
 #dictionaryBtn.compact {
     background: linear-gradient(135deg, #795548, #5D4037);
+}
+
+#readAloudBtn.compact {
+    background: linear-gradient(135deg, #00BCD4, #0097A7);
+}
+
+#readAloudBtn.compact.reading {
+    background: linear-gradient(135deg, #F44336, #D32F2F);
+    animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
 }
 
 /* Disabled state for compact buttons */
@@ -844,6 +875,17 @@ body {
     }
 }
 
+/* Hide search controls when PDF section is narrow */
+.pdf-section {
+    container-type: inline-size;
+}
+
+@container (max-width: 600px) {
+    .search-controls {
+        display: none;
+    }
+}
+
 /* Scrollbar Styling */
 ::-webkit-scrollbar {
     width: 8px;
@@ -1024,7 +1066,7 @@ body {
 
 .popup-actions {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr 1fr 1fr;
     gap: 8px;
     padding: 12px;
 }
@@ -1107,6 +1149,23 @@ body {
 .popup-btn.dictionary:hover {
     background: #795548;
     color: white;
+}
+
+.popup-btn.read-aloud {
+    border-color: #00BCD4;
+    color: #00BCD4;
+}
+
+.popup-btn.read-aloud:hover {
+    background: #00BCD4;
+    color: white;
+}
+
+.popup-btn.read-aloud.reading {
+    background: #F44336;
+    color: white;
+    border-color: #F44336;
+    animation: pulse 1.5s ease-in-out infinite;
 }
 
 .popup-btn i {

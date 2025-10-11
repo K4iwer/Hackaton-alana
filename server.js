@@ -53,28 +53,19 @@ app.post('/api/upload', upload.single('pdf'), (req, res) => {
   res.json({ message: 'File uploaded successfully', filename: req.file.filename });
 });
 
+// Initialize Gemini AI
+const { GoogleGenAI } = require("@google/genai");
+const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+
 // Helper to call Gemini
 async function callGeminiGenerateContent(userText) {
-  const url = `https://generativelanguage.googleapis.com/v1/models/${encodeURIComponent(GEMINI_MODEL)}:generateContent?key=${process.env.GEMINI_API_KEY}`;
-  const payload = {
-    contents: [
-      {
-        role: 'user',
-        parts: [{ text: userText }]
-      }
-    ]
-  };
-
-  const response = await axios.post(url, payload, {
-    headers: { 'Content-Type': 'application/json' }
+  const response = await ai.models.generateContent({
+    model: 'gemini-2.0-flash-exp',
+    contents: userText
   });
-
-  return response.data.candidates[0].content.parts[0].text;
+  
+  return response.text;
 }
-
-// Initialize Gemini AI
-const { GoogleGenerativeAI } = require('@google/generative-ai');
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 // AI text simplification endpoint
 app.post('/api/simplify', async (req, res) => {
@@ -85,14 +76,14 @@ app.post('/api/simplify', async (req, res) => {
       return res.status(400).json({ error: 'Text is required' });
     }
 
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-    
     // Use custom prompt if provided, otherwise use default simplification prompt
-    const finalPrompt = prompt || `Simplifique o seguinte texto em português de forma clara e objetiva, mantendo o significado original: ${text}`;
+    const finalPrompt = prompt || `Simplifique o seguinte texto em português de forma clara e objetiva, mantendo o significado original. O texto foi removido de um livro, e sua resposta deve conter apenas o texto simplificado: ${text}`;
     
-    const result = await model.generateContent(finalPrompt);
-    const response = await result.response;
-    const simplifiedText = response.text();
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.0-flash-exp',
+      contents: finalPrompt
+    });
+    const simplifiedText = response.text;
 
     res.json({ simplifiedText });
   } catch (error) {
@@ -110,18 +101,18 @@ app.post('/api/summarize', async (req, res) => {
       return res.status(400).json({ error: 'Text is required' });
     }
 
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-    
-    const prompt = `Faça um resumo claro e objetivo do seguinte texto em português. 
+    const promptText = `Faça um resumo claro e objetivo do seguinte texto em português. 
     Identifique e explique os pontos principais, conceitos-chave e ideias centrais do texto.
     Mantenha o foco no conteúdo do texto, não no contexto histórico.
     O resumo deve ser informativo e didático:
 
     ${text}`;
     
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    const summary = response.text();
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.0-flash-exp',
+      contents: promptText
+    });
+    const summary = response.text;
 
     res.json({ summary });
   } catch (error) {
@@ -139,9 +130,7 @@ app.post('/api/dictionary', async (req, res) => {
       return res.status(400).json({ error: 'Word is required' });
     }
 
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-    
-    const prompt = `Atue como um dicionário completo em português. Para a palavra ou expressão "${word}", forneça:
+    const promptText = `Atue como um dicionário completo em português. Para a palavra ou expressão "${word}", forneça:
 
     1. **Definição**: Significado claro e preciso
     2. **Classe gramatical**: (substantivo, verbo, adjetivo, etc.)
@@ -152,9 +141,11 @@ app.post('/api/dictionary', async (req, res) => {
 
     Formate a resposta de forma clara e organizada em português.`;
     
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    const definition = response.text();
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.0-flash-exp',
+      contents: promptText
+    });
+    const definition = response.text;
 
     res.json({ definition });
   } catch (error) {

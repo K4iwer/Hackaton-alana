@@ -25,9 +25,15 @@ class AIPDFReader {
         };
         this.isExtendingSelection = false;
         
+        // Text-to-Speech state
+        this.speechSynthesis = window.speechSynthesis;
+        this.currentUtterance = null;
+        this.isReading = false;
+        
         this.initializeElements();
         this.setupEventListeners();
         this.loadAvailablePDFs();
+        this.initializeVoices();
     }
 
     initializeElements() {
@@ -103,6 +109,10 @@ class AIPDFReader {
         this.popupHistoricalContextBtn = document.getElementById('popupHistoricalContextBtn');
         this.popupContinueSelectionBtn = document.getElementById('popupContinueSelectionBtn');
         
+        // Read Aloud buttons
+        this.readAloudBtn = document.getElementById('readAloudBtn');
+        this.popupReadAloudBtn = document.getElementById('popupReadAloudBtn');
+        
         // Enable chat by default (chat can work with or without selection)
         if (this.chatInput) this.chatInput.disabled = false;
         if (this.sendMessageBtn) this.sendMessageBtn.disabled = false;
@@ -150,6 +160,7 @@ class AIPDFReader {
         if (this.historicalContextBtn) {
             this.historicalContextBtn.addEventListener('click', () => this.generateHistoricalContext());
         }
+        this.readAloudBtn.addEventListener('click', () => this.toggleReadAloud());
         this.clearSelectionBtn.addEventListener('click', () => this.clearSelection());
         this.sendMessageBtn.addEventListener('click', () => this.sendMessage());
         this.chatInput.addEventListener('keypress', (e) => {
@@ -199,6 +210,10 @@ class AIPDFReader {
         this.popupContinueSelectionBtn.addEventListener('click', () => {
             this.hideSelectionPopup();
             this.continueSelectionOnNextPage();
+        });
+        this.popupReadAloudBtn.addEventListener('click', () => {
+            this.hideSelectionPopup();
+            this.toggleReadAloud();
         });
         
         // Hide popup when clicking outside
@@ -259,6 +274,18 @@ class AIPDFReader {
             console.error('Error loading PDFs:', error);
             // Inform the user clearly if the server is not running
             this.addMessage('ai', '⚠️ Não consegui conectar ao servidor. Certifique-se de que ele está em execução (npm start) e acesse via http://localhost:3000, não abrindo o arquivo HTML diretamente.');
+        }
+    }
+
+    initializeVoices() {
+        // Load voices for speech synthesis
+        if (this.speechSynthesis) {
+            // Chrome loads voices asynchronously
+            if (this.speechSynthesis.getVoices().length === 0) {
+                this.speechSynthesis.addEventListener('voiceschanged', () => {
+                    console.log('Voices loaded:', this.speechSynthesis.getVoices().length);
+                });
+            }
         }
     }
 
@@ -525,6 +552,7 @@ class AIPDFReader {
                 this.generateImageBtn.disabled = false;
                 this.summarizeBtn.disabled = false;
                 this.dictionaryBtn.disabled = false;
+                this.readAloudBtn.disabled = false;
                 if (this.historicalContextBtn) this.historicalContextBtn.disabled = false;
                 this.chatInput.disabled = false;
                 this.sendMessageBtn.disabled = false;
@@ -611,6 +639,7 @@ class AIPDFReader {
             this.selectedTextDisplay.style.display = 'block';
             this.simplifyBtn.disabled = false;
             this.generateImageBtn.disabled = false;
+            this.readAloudBtn.disabled = false;
             if (this.historicalContextBtn) this.historicalContextBtn.disabled = false;
             this.continueSelectionBtn.disabled = false;
             this.chatInput.disabled = false;
@@ -681,6 +710,7 @@ class AIPDFReader {
     }
 
     clearSelection() {
+        this.stopReading();
         this.clearMultiPageSelection();
         this.selectedText = '';
         this.selectedTextDisplay.style.display = 'none';
@@ -688,6 +718,7 @@ class AIPDFReader {
         this.generateImageBtn.disabled = true;
         this.summarizeBtn.disabled = true;
         this.dictionaryBtn.disabled = true;
+        this.readAloudBtn.disabled = true;
         this.continueSelectionBtn.disabled = true;
         if (this.historicalContextBtn) this.historicalContextBtn.disabled = true;
         this.hideKeyboardHints();
@@ -815,9 +846,111 @@ class AIPDFReader {
         this.toolsNextBtn.style.display = needsNavigation ? 'flex' : 'none';
     }
 
+    // ========== Text-to-Speech Methods ==========
+    toggleReadAloud() {
+        if (this.isReading) {
+            this.stopReading();
+        } else {
+            this.startReading();
+        }
+    }
+
+    startReading() {
+        if (!this.selectedText || !this.speechSynthesis) {
+            this.addMessage('ai', '⚠️ Seu navegador não suporta leitura em voz alta ou não há texto selecionado.');
+            return;
+        }
+
+        // Stop any ongoing speech
+        this.speechSynthesis.cancel();
+
+        // Create new utterance
+        this.currentUtterance = new SpeechSynthesisUtterance(this.selectedText);
+        
+        // Configure voice settings
+        this.currentUtterance.lang = 'pt-BR'; // Portuguese (Brazil)
+        this.currentUtterance.rate = 1.0; // Normal speed
+        this.currentUtterance.pitch = 1.0; // Normal pitch
+        this.currentUtterance.volume = 1.0; // Full volume
+
+        // Try to find a Portuguese voice
+        const voices = this.speechSynthesis.getVoices();
+        const portugueseVoice = voices.find(voice => 
+            voice.lang.startsWith('pt-BR') || voice.lang.startsWith('pt')
+        );
+        if (portugueseVoice) {
+            this.currentUtterance.voice = portugueseVoice;
+        }
+
+        // Event handlers
+        this.currentUtterance.onstart = () => {
+            this.isReading = true;
+            this.updateReadingUI(true);
+            this.addMessage('ai', '🔊 Iniciando leitura em voz alta...');
+        };
+
+        this.currentUtterance.onend = () => {
+            this.isReading = false;
+            this.updateReadingUI(false);
+            this.addMessage('ai', '✅ Leitura concluída.');
+        };
+
+        this.currentUtterance.onerror = (event) => {
+            this.isReading = false;
+            this.updateReadingUI(false);
+            console.error('Speech synthesis error:', event);
+            this.addMessage('ai', '⚠️ Erro ao ler o texto. Tente novamente.');
+        };
+
+        // Start speaking
+        this.speechSynthesis.speak(this.currentUtterance);
+    }
+
+    stopReading() {
+        if (this.speechSynthesis && this.isReading) {
+            this.speechSynthesis.cancel();
+            this.isReading = false;
+            this.updateReadingUI(false);
+        }
+    }
+
+    updateReadingUI(isReading) {
+        // Update button appearance
+        if (this.readAloudBtn) {
+            if (isReading) {
+                this.readAloudBtn.classList.add('reading');
+                this.readAloudBtn.querySelector('i').className = 'fas fa-stop';
+                this.readAloudBtn.querySelector('span').textContent = 'Parar Leitura';
+                this.readAloudBtn.title = 'Parar leitura em voz alta';
+            } else {
+                this.readAloudBtn.classList.remove('reading');
+                this.readAloudBtn.querySelector('i').className = 'fas fa-volume-up';
+                this.readAloudBtn.querySelector('span').textContent = 'Ler em Voz Alta';
+                this.readAloudBtn.title = 'Ler texto selecionado em voz alta';
+            }
+        }
+
+        // Update popup button
+        if (this.popupReadAloudBtn) {
+            if (isReading) {
+                this.popupReadAloudBtn.classList.add('reading');
+                this.popupReadAloudBtn.querySelector('i').className = 'fas fa-stop';
+                this.popupReadAloudBtn.querySelector('span').textContent = 'Parar';
+            } else {
+                this.popupReadAloudBtn.classList.remove('reading');
+                this.popupReadAloudBtn.querySelector('i').className = 'fas fa-volume-up';
+                this.popupReadAloudBtn.querySelector('span').textContent = 'Ler em Voz Alta';
+            }
+        }
+    }
+
     setLayout(layoutType) {
         // Remove all layout classes
         this.mainContent.classList.remove('pdf-focus', 'balanced', 'chat-focus');
+        
+        // Clear any inline styles from manual resizing
+        this.pdfSection.style.flex = '';
+        this.aiSection.style.flex = '';
         
         // Add new layout class
         this.mainContent.classList.add(layoutType);
@@ -837,8 +970,9 @@ class AIPDFReader {
                 break;
         }
         
-        // Save preference
+        // Save preference and clear custom layout
         localStorage.setItem('layoutPreference', layoutType);
+        localStorage.removeItem('customLayout');
         
         // Update canvas size after layout change
         setTimeout(() => {
@@ -916,14 +1050,15 @@ class AIPDFReader {
         const savedLayout = localStorage.getItem('layoutPreference');
         const customLayout = localStorage.getItem('customLayout');
         
-        if (customLayout) {
-            // Load custom layout
+        if (customLayout && !savedLayout) {
+            // Load custom layout only if no preset is saved
             const layout = JSON.parse(customLayout);
             this.pdfSection.style.flex = `0 0 ${layout.pdfWidth}%`;
             this.aiSection.style.flex = `0 0 ${layout.aiWidth}%`;
             // Don't activate any preset button for custom layouts
+            document.querySelectorAll('.layout-btn-header').forEach(btn => btn.classList.remove('active'));
         } else if (savedLayout) {
-            // Load preset layout
+            // Load preset layout (has priority over custom)
             this.setLayout(savedLayout);
         } else {
             // Default to balanced
