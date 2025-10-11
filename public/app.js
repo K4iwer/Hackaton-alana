@@ -34,6 +34,7 @@ class AIPDFReader {
         this.setupEventListeners();
         this.loadAvailablePDFs();
         this.initializeVoices();
+        this.checkForSelectedBook();
     }
 
     initializeElements() {
@@ -41,8 +42,6 @@ class AIPDFReader {
         this.canvas = document.getElementById('pdfCanvas');
         this.ctx = this.canvas.getContext('2d');
         this.textLayer = document.getElementById('textLayer');
-        this.pdfSelector = document.getElementById('pdfSelector');
-        this.fileUpload = document.getElementById('fileUpload');
         
         // Control elements
         this.prevPageBtn = document.getElementById('prevPage');
@@ -70,7 +69,6 @@ class AIPDFReader {
         this.generateImageBtn = document.getElementById('generateImageBtn');
         this.summarizeBtn = document.getElementById('summarizeBtn');
         this.dictionaryBtn = document.getElementById('dictionaryBtn');
-        this.historicalContextBtn = document.getElementById('historicalContextBtn');
         this.continueSelectionBtn = document.getElementById('continueSelectionBtn');
         this.selectedTextDisplay = document.getElementById('selectedTextDisplay');
         this.selectedTextContent = document.getElementById('selectedTextContent');
@@ -106,7 +104,6 @@ class AIPDFReader {
         this.popupGenerateImageBtn = document.getElementById('popupGenerateImageBtn');
         this.popupSummarizeBtn = document.getElementById('popupSummarizeBtn');
         this.popupDictionaryBtn = document.getElementById('popupDictionaryBtn');
-        this.popupHistoricalContextBtn = document.getElementById('popupHistoricalContextBtn');
         this.popupContinueSelectionBtn = document.getElementById('popupContinueSelectionBtn');
         
         // Read Aloud buttons
@@ -125,8 +122,6 @@ class AIPDFReader {
 
     setupEventListeners() {
         // PDF controls
-        this.pdfSelector.addEventListener('change', (e) => this.loadSelectedPDF(e.target.value));
-        this.fileUpload.addEventListener('change', (e) => this.handleFileUpload(e));
         this.prevPageBtn.addEventListener('click', () => this.previousPage());
         this.nextPageBtn.addEventListener('click', () => this.nextPage());
         this.currentPageInput.addEventListener('change', (e) => this.goToPage(parseInt(e.target.value)));
@@ -157,9 +152,6 @@ class AIPDFReader {
         this.summarizeBtn.addEventListener('click', () => this.summarizeSelectedText());
         this.dictionaryBtn.addEventListener('click', () => this.lookupDictionary());
         this.continueSelectionBtn.addEventListener('click', () => this.continueSelectionOnNextPage());
-        if (this.historicalContextBtn) {
-            this.historicalContextBtn.addEventListener('click', () => this.generateHistoricalContext());
-        }
         this.readAloudBtn.addEventListener('click', () => this.toggleReadAloud());
         this.clearSelectionBtn.addEventListener('click', () => this.clearSelection());
         this.sendMessageBtn.addEventListener('click', () => this.sendMessage());
@@ -201,12 +193,6 @@ class AIPDFReader {
             this.hideSelectionPopup();
             this.lookupDictionary();
         });
-        if (this.popupHistoricalContextBtn) {
-            this.popupHistoricalContextBtn.addEventListener('click', () => {
-                this.hideSelectionPopup();
-                this.generateHistoricalContext();
-            });
-        }
         this.popupContinueSelectionBtn.addEventListener('click', () => {
             this.hideSelectionPopup();
             this.continueSelectionOnNextPage();
@@ -259,22 +245,8 @@ class AIPDFReader {
     }
 
     async loadAvailablePDFs() {
-        try {
-            const response = await fetch('/api/pdfs');
-            const pdfs = await response.json();
-            
-            this.pdfSelector.innerHTML = '<option value="">Selecione um PDF...</option>';
-            pdfs.forEach(pdf => {
-                const option = document.createElement('option');
-                option.value = pdf.name;
-                option.textContent = pdf.displayName;
-                this.pdfSelector.appendChild(option);
-            });
-        } catch (error) {
-            console.error('Error loading PDFs:', error);
-            // Inform the user clearly if the server is not running
-            this.addMessage('ai', '⚠️ Não consegui conectar ao servidor. Certifique-se de que ele está em execução (npm start) e acesse via http://localhost:3000, não abrindo o arquivo HTML diretamente.');
-        }
+        // PDFs are now selected from the library page
+        // This method is kept for compatibility but does nothing
     }
 
     initializeVoices() {
@@ -553,7 +525,6 @@ class AIPDFReader {
                 this.summarizeBtn.disabled = false;
                 this.dictionaryBtn.disabled = false;
                 this.readAloudBtn.disabled = false;
-                if (this.historicalContextBtn) this.historicalContextBtn.disabled = false;
                 this.chatInput.disabled = false;
                 this.sendMessageBtn.disabled = false;
                 this.continueSelectionBtn.disabled = false;
@@ -640,7 +611,6 @@ class AIPDFReader {
             this.simplifyBtn.disabled = false;
             this.generateImageBtn.disabled = false;
             this.readAloudBtn.disabled = false;
-            if (this.historicalContextBtn) this.historicalContextBtn.disabled = false;
             this.continueSelectionBtn.disabled = false;
             this.chatInput.disabled = false;
             this.sendMessageBtn.disabled = false;
@@ -720,7 +690,6 @@ class AIPDFReader {
         this.dictionaryBtn.disabled = true;
         this.readAloudBtn.disabled = true;
         this.continueSelectionBtn.disabled = true;
-        if (this.historicalContextBtn) this.historicalContextBtn.disabled = true;
         this.hideKeyboardHints();
         this.hideSelectionPopup();
         window.getSelection().removeAllRanges();
@@ -855,7 +824,7 @@ class AIPDFReader {
         }
     }
 
-    startReading() {
+    async startReading() {
         if (!this.selectedText || !this.speechSynthesis) {
             this.addMessage('ai', '⚠️ Seu navegador não suporta leitura em voz alta ou não há texto selecionado.');
             return;
@@ -864,22 +833,24 @@ class AIPDFReader {
         // Stop any ongoing speech
         this.speechSynthesis.cancel();
 
+        // Clean and prepare text for reading
+        let textToRead = await this.prepareTextForSpeech(this.selectedText);
+
         // Create new utterance
-        this.currentUtterance = new SpeechSynthesisUtterance(this.selectedText);
+        this.currentUtterance = new SpeechSynthesisUtterance(textToRead);
         
-        // Configure voice settings
+        // Configure voice settings for more natural speech
         this.currentUtterance.lang = 'pt-BR'; // Portuguese (Brazil)
-        this.currentUtterance.rate = 1.0; // Normal speed
-        this.currentUtterance.pitch = 1.0; // Normal pitch
+        this.currentUtterance.rate = 0.95; // Slightly slower for better clarity
+        this.currentUtterance.pitch = 1.05; // Slightly higher pitch for more natural sound
         this.currentUtterance.volume = 1.0; // Full volume
 
-        // Try to find a Portuguese voice
+        // Try to find the best Portuguese voice (prefer Google or Microsoft voices)
         const voices = this.speechSynthesis.getVoices();
-        const portugueseVoice = voices.find(voice => 
-            voice.lang.startsWith('pt-BR') || voice.lang.startsWith('pt')
-        );
+        const portugueseVoice = this.selectBestVoice(voices);
         if (portugueseVoice) {
             this.currentUtterance.voice = portugueseVoice;
+            console.log('Using voice:', portugueseVoice.name);
         }
 
         // Event handlers
@@ -904,6 +875,117 @@ class AIPDFReader {
 
         // Start speaking
         this.speechSynthesis.speak(this.currentUtterance);
+    }
+
+    selectBestVoice(voices) {
+        // Priority order: Google > Microsoft > Other Portuguese voices
+        const priorities = [
+            // Google voices (usually the best quality)
+            voice => voice.name.includes('Google') && voice.lang.startsWith('pt-BR'),
+            voice => voice.name.includes('Google') && voice.lang.startsWith('pt'),
+            // Microsoft voices (good quality)
+            voice => voice.name.includes('Microsoft') && voice.lang.startsWith('pt-BR'),
+            voice => voice.name.includes('Microsoft') && voice.lang.startsWith('pt'),
+            // Any Brazilian Portuguese
+            voice => voice.lang.startsWith('pt-BR'),
+            // Any Portuguese
+            voice => voice.lang.startsWith('pt')
+        ];
+
+        for (const priorityFn of priorities) {
+            const voice = voices.find(priorityFn);
+            if (voice) return voice;
+        }
+
+        return null;
+    }
+
+    async prepareTextForSpeech(text) {
+        // First, apply local cleaning (fast and free)
+        let cleanedText = this.cleanTextLocally(text);
+
+        // If text is still problematic (very short fragments, lots of numbers, etc.)
+        // use AI to improve it
+        if (this.shouldUseAIForCleaning(cleanedText)) {
+            try {
+                cleanedText = await this.cleanTextWithAI(cleanedText);
+            } catch (error) {
+                console.log('AI cleaning failed, using local cleaning only:', error);
+                // If AI fails, use the locally cleaned version
+            }
+        }
+
+        return cleanedText;
+    }
+
+    cleanTextLocally(text) {
+        let cleaned = text;
+
+        // Remove common PDF artifacts
+        cleaned = cleaned
+            // Remove page numbers (standalone numbers at start/end)
+            .replace(/^\d+\s*/, '') // Numbers at start
+            .replace(/\s*\d+$/, '') // Numbers at end
+            // Remove multiple spaces
+            .replace(/\s{2,}/g, ' ')
+            // Fix common word breaks (words split with hyphen)
+            .replace(/(\w+)-\s+(\w+)/g, '$1$2')
+            // Add space after punctuation if missing
+            .replace(/([.!?;:,])([A-ZÀ-Ú])/g, '$1 $2')
+            // Remove standalone single characters (often OCR errors)
+            .replace(/\s[a-zA-Z]\s/g, ' ')
+            // Fix common ligatures and special characters
+            .replace(/ﬁ/g, 'fi')
+            .replace(/ﬂ/g, 'fl')
+            .replace(/ﬀ/g, 'ff')
+            // Remove header/footer patterns (all caps short lines)
+            .replace(/^[A-Z\s]{2,20}$/gm, '')
+            // Clean up resulting multiple spaces again
+            .replace(/\s{2,}/g, ' ')
+            .trim();
+
+        return cleaned;
+    }
+
+    shouldUseAIForCleaning(text) {
+        // Use AI cleaning if:
+        // 1. Text has many numbers mixed with words (likely page numbers/footnotes)
+        const numberRatio = (text.match(/\d/g) || []).length / text.length;
+        if (numberRatio > 0.15) return true;
+
+        // 2. Text has many very short words (likely broken)
+        const words = text.split(/\s+/);
+        const shortWords = words.filter(w => w.length <= 2).length;
+        if (shortWords / words.length > 0.3) return true;
+
+        // 3. Text has unusual character patterns
+        if (/[^\w\s\.,!?;:áàâãéêíóôõúçÁÀÂÃÉÊÍÓÔÕÚÇ-]/gi.test(text)) return true;
+
+        return false;
+    }
+
+    async cleanTextWithAI(text) {
+        this.showLoading('Preparando texto para leitura...');
+        
+        try {
+            const response = await fetch('/api/clean-text-for-speech', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ text })
+            });
+
+            const data = await response.json();
+            
+            if (response.ok) {
+                return data.cleanedText;
+            } else {
+                throw new Error(data.error);
+            }
+        } finally {
+            this.hideLoading();
+        }
     }
 
     stopReading() {
@@ -1169,40 +1251,6 @@ class AIPDFReader {
                 this.addMessage('ai', '⚠️ Falha ao conectar ao servidor. Verifique se o servidor está rodando com "npm start" e tente novamente.');
             } else {
                 this.addMessage('ai', 'Desculpe, ocorreu um erro ao consultar o dicionário. Verifique se a chave da API do Gemini está configurada no arquivo .env e reinicie o servidor.');
-            }
-        } finally {
-            this.hideLoading();
-        }
-    }
-
-    async generateHistoricalContext() {
-        if (!this.selectedText) return;
-
-        try {
-            this.showLoading('Analisando contexto histórico...');
-            const response = await fetch('/api/historical-context', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ text: this.selectedText })
-            });
-
-            const data = await response.json();
-            
-            if (response.ok) {
-                this.addMessage('user', `🏛️ Contexto Histórico: "${this.selectedText.substring(0, 100)}${this.selectedText.length > 100 ? '...' : ''}"`);
-                this.addMessage('ai', data.historicalContext);
-            } else {
-                throw new Error(data.error);
-            }
-        } catch (error) {
-            console.error('Error generating historical context:', error);
-            const offline = error?.message?.toLowerCase?.().includes('failed') || error?.name === 'TypeError';
-            if (offline) {
-                this.addMessage('ai', '⚠️ Falha ao conectar ao servidor. Verifique se o servidor está rodando com "npm start" e tente novamente.');
-            } else {
-                this.addMessage('ai', 'Desculpe, ocorreu um erro ao gerar o contexto histórico. Verifique se a chave da API do Gemini está configurada no arquivo .env e reinicie o servidor.');
             }
         } finally {
             this.hideLoading();
@@ -1492,6 +1540,19 @@ class AIPDFReader {
 
     hideLoading() {
         this.loadingOverlay.style.display = 'none';
+    }
+
+    // Check for selected book from URL parameters
+    checkForSelectedBook() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const selectedBook = urlParams.get('book');
+        
+        if (selectedBook) {
+            // Load the selected book directly
+            setTimeout(() => {
+                this.loadSelectedPDF(selectedBook);
+            }, 500);
+        }
     }
 }
 

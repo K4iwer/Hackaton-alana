@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Biblioteca - LeIA Sem Barreiras</title>
+    <link rel="stylesheet" href="library.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="library-container">
+        <!-- Background Animation -->
+        <div class="background-animation">
+            <div class="floating-element"></div>
+            <div class="floating-element"></div>
+            <div class="floating-element"></div>
+            <div class="floating-element"></div>
+        </div>
+
+        <!-- Header -->
+        <header class="library-header">
+            <div class="header-content">
+                <div class="logo">
+                    <i class="fas fa-book-reader"></i>
+                    <h1>Le<strong>IA</strong> Sem Barreiras</h1>
+                </div>
+                <nav class="header-nav">
+                    <a href="/" class="nav-link">
+                        <i class="fas fa-home"></i>
+                        Início
+                    </a>
+                    <a href="/login" class="nav-link">
+                        <i class="fas fa-sign-in-alt"></i>
+                        Login
+                    </a>
+                </nav>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="library-intro">
+                <h2>Escolha um Livro para Começar</h2>
+                <p>Selecione uma das obras disponíveis em nossa biblioteca para experimentar a leitura inteligente com IA</p>
+            </div>
+
+            <!-- Books Grid -->
+            <div class="books-grid" id="booksGrid">
+                <div class="book-card" data-pdf="Memórias de Martha.pdf">
+                    <div class="book-cover">
+                        <i class="fas fa-book"></i>
+                        <div class="book-spine"></div>
+                    </div>
+                    <div class="book-info">
+                        <h3>Memórias de Martha</h3>
+                        <p class="book-author">Literatura Clássica</p>
+                        <p class="book-description">Uma narrativa envolvente sobre memórias e experiências de vida.</p>
+                        <div class="book-stats">
+                            <span><i class="fas fa-file-pdf"></i> PDF</span>
+                            <span><i class="fas fa-clock"></i> ~30 min</span>
+                        </div>
+                    </div>
+                    <button class="select-book-btn">
+                        <i class="fas fa-play"></i>
+                        Ler Agora
+                    </button>
+                </div>
+
+                <div class="book-card" data-pdf="Nebulosas.pdf">
+                    <div class="book-cover nebulosas">
+                        <i class="fas fa-star"></i>
+                        <div class="book-spine"></div>
+                    </div>
+                    <div class="book-info">
+                        <h3>Nebulosas</h3>
+                        <p class="book-author">Astronomia & Ciência</p>
+                        <p class="book-description">Explore os mistérios do universo e das formações estelares.</p>
+                        <div class="book-stats">
+                            <span><i class="fas fa-file-pdf"></i> PDF</span>
+                            <span><i class="fas fa-clock"></i> ~45 min</span>
+                        </div>
+                    </div>
+                    <button class="select-book-btn">
+                        <i class="fas fa-play"></i>
+                        Ler Agora
+                    </button>
+                </div>
+
+                <div class="book-card" data-pdf="Opusculo_humanitario.pdf">
+                    <div class="book-cover humanitario">
+                        <i class="fas fa-heart"></i>
+                        <div class="book-spine"></div>
+                    </div>
+                    <div class="book-info">
+                        <h3>Opúsculo Humanitário</h3>
+                        <p class="book-author">Filosofia & Humanidades</p>
+                        <p class="book-description">Reflexões sobre humanidade e valores sociais.</p>
+                        <div class="book-stats">
+                            <span><i class="fas fa-file-pdf"></i> PDF</span>
+                            <span><i class="fas fa-clock"></i> ~25 min</span>
+                        </div>
+                    </div>
+                    <button class="select-book-btn">
+                        <i class="fas fa-play"></i>
+                        Ler Agora
+                    </button>
+                </div>
+
+                <div class="book-card" data-pdf="ep01.pdf">
+                    <div class="book-cover episodio">
+                        <i class="fas fa-bookmark"></i>
+                        <div class="book-spine"></div>
+                    </div>
+                    <div class="book-info">
+                        <h3>Episódio 01</h3>
+                        <p class="book-author">Série Literária</p>
+                        <p class="book-description">Primeiro episódio de uma série cativante.</p>
+                        <div class="book-stats">
+                            <span><i class="fas fa-file-pdf"></i> PDF</span>
+                            <span><i class="fas fa-clock"></i> ~20 min</span>
+                        </div>
+                    </div>
+                    <button class="select-book-btn">
+                        <i class="fas fa-play"></i>
+                        Ler Agora
+                    </button>
+                </div>
+            </div>
+
+            <!-- Features Preview -->
+            <div class="features-section">
+                <h3>O que você pode fazer com o Le<strong>IA</strong> Sem Barreiras:</h3>
+                <div class="features-grid">
+                    <div class="feature-item">
+                        <i class="fas fa-language"></i>
+                        <div>
+                            <h4>Simplificação de Texto</h4>
+                            <p>Transforme textos complexos em linguagem simples</p>
+                        </div>
+                    </div>
+                    <div class="feature-item">
+                        <i class="fas fa-image"></i>
+                        <div>
+                            <h4>Descrições Visuais</h4>
+                            <p>Gere descrições de imagens para conceitos abstratos</p>
+                        </div>
+                    </div>
+                    <div class="feature-item">
+                        <i class="fas fa-history"></i>
+                        <div>
+                            <h4>Contexto Histórico</h4>
+                            <p>Entenda o contexto histórico e cultural das obras</p>
+                        </div>
+                    </div>
+                    <div class="feature-item">
+                        <i class="fas fa-robot"></i>
+                        <div>
+                            <h4>Assistente IA</h4>
+                            <p>Converse com a IA sobre qualquer trecho do texto</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="library-footer">
+            <p>&copy; 2024 Le<strong>IA</strong> Sem Barreiras - Hackathon Alana. Leitura inteligente para todos.</p>
+        </footer>
+    </div>
+
+    <!-- Book Info Modal -->
+    <div id="bookInfoModal" class="book-info-modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalBookTitle">Título do Livro</h2>
+                <button class="close-modal" onclick="closeBookModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div class="modal-body">
+                <div class="accordion-container">
+                    <div class="accordion-item">
+                        <div class="accordion-header" onclick="toggleAccordion(this)">
+                            <h3><i class="fas fa-key"></i> Pontos Chaves</h3>
+                            <i class="fas fa-chevron-down accordion-icon"></i>
+                        </div>
+                        <div class="accordion-content">
+                            <ul id="modalKeyPoints">
+                                <li>Ponto chave 1</li>
+                                <li>Ponto chave 2</li>
+                                <li>Ponto chave 3</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="accordion-item">
+                        <div class="accordion-header" onclick="toggleAccordion(this)">
+                            <h3><i class="fas fa-history"></i> Contexto Histórico</h3>
+                            <i class="fas fa-chevron-down accordion-icon"></i>
+                        </div>
+                        <div class="accordion-content">
+                            <p id="modalHistoricalContext">
+                                Contexto histórico da obra...
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <div class="accordion-item">
+                        <div class="accordion-header" onclick="toggleAccordion(this)">
+                            <h3><i class="fas fa-user"></i> Sobre Autor(a)</h3>
+                            <i class="fas fa-chevron-down accordion-icon"></i>
+                        </div>
+                        <div class="accordion-content">
+                            <p id="modalAuthorInfo">
+                                Informações sobre o autor...
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <div class="accordion-item">
+                        <div class="accordion-header" onclick="toggleAccordion(this)">
+                            <h3><i class="fas fa-book-open"></i> Breve Resumo</h3>
+                            <i class="fas fa-chevron-down accordion-icon"></i>
+                        </div>
+                        <div class="accordion-content">
+                            <p id="modalSummary">
+                                Resumo da obra...
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="modal-footer">
+                <button class="start-reading-btn" onclick="startReading()">
+                    <i class="fas fa-play"></i>
+                    Começar Leitura
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay" style="display: none;">
+        <div class="loading-spinner">
+            <i class="fas fa-spinner fa-spin"></i>
+            <p>Carregando livro...</p>
+        </div>
+    </div>
+
+    <script>
+        // Book data with detailed information
+        const bookData = {
+            'Memórias de Martha.pdf': {
+                title: 'Memórias de Martha',
+                keyPoints: [
+                    'Narrativa autobiográfica envolvente',
+                    'Reflexões sobre a condição feminina',
+                    'Retrato da sociedade brasileira do século XIX',
+                    'Linguagem poética e intimista'
+                ],
+                historicalContext: 'Obra do século XIX que retrata a vida de uma mulher em uma sociedade patriarcal. Reflete os costumes e valores da época, oferecendo uma perspectiva única sobre o papel feminino na literatura brasileira.',
+                authorInfo: 'Autora brasileira do período romântico, conhecida por suas narrativas intimistas e pela abordagem sensível de temas sociais. Pioneira na literatura feminina nacional.',
+                summary: 'As memórias de Martha revelam a jornada de uma mulher através de diferentes fases da vida, explorando temas como amor, perda, crescimento pessoal e a busca por identidade em uma sociedade em transformação.'
+            },
+            'Nebulosas.pdf': {
+                title: 'Nebulosas',
+                keyPoints: [
+                    'Exploração científica do cosmos',
+                    'Formação e evolução estelar',
+                    'Mistérios do universo profundo',
+                    'Conexão entre ciência e filosofia'
+                ],
+                historicalContext: 'Obra científica que marca um período de grandes descobertas astronômicas. Escrita durante o auge da exploração espacial, quando novas tecnologias permitiram observações mais detalhadas do cosmos.',
+                authorInfo: 'Astrônomo e divulgador científico reconhecido internacionalmente. Dedicou sua carreira ao estudo de formações estelares e à popularização da astronomia.',
+                summary: 'Uma jornada fascinante através das nebulosas do universo, explicando como essas formações cósmicas nascem, evoluem e morrem, revelando os segredos da criação estelar e da evolução do cosmos.'
+            },
+            'Opusculo_humanitario.pdf': {
+                title: 'Opúsculo Humanitário',
+                keyPoints: [
+                    'Valores humanitários universais',
+                    'Crítica social e moral',
+                    'Propostas de reforma social',
+                    'Filosofia do bem comum'
+                ],
+                historicalContext: 'Texto filosófico escrito durante um período de grandes transformações sociais. Reflete as ideias iluministas e humanitárias que influenciaram movimentos de reforma social.',
+                authorInfo: 'Filósofo e reformador social, dedicou sua vida à promoção de valores humanitários e à luta por justiça social. Suas ideias influenciaram gerações de pensadores.',
+                summary: 'Uma reflexão profunda sobre os valores que devem guiar a humanidade, propondo princípios éticos e morais para a construção de uma sociedade mais justa e compassiva.'
+            },
+            'ep01.pdf': {
+                title: 'Episódio 01',
+                keyPoints: [
+                    'Início de uma saga épica',
+                    'Desenvolvimento de personagens únicos',
+                    'Mundo fantástico detalhado',
+                    'Temas de aventura e descoberta'
+                ],
+                historicalContext: 'Primeiro episódio de uma série literária contemporânea que combina elementos clássicos da literatura de aventura com narrativas modernas.',
+                authorInfo: 'Escritor contemporâneo especializado em literatura de aventura e fantasia. Conhecido por criar mundos ricos e personagens cativantes.',
+                summary: 'O primeiro capítulo de uma jornada extraordinária, onde heróis improváveis se unem para enfrentar desafios épicos em um mundo cheio de mistérios e magia.'
+            }
+        };
+
+        let selectedBookPdf = '';
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add click handlers to book cards
+            const bookCards = document.querySelectorAll('.book-card');
+            
+            bookCards.forEach(card => {
+                const selectBtn = card.querySelector('.select-book-btn');
+                const pdfName = card.dataset.pdf;
+                
+                // Add hover effects
+                card.addEventListener('mouseenter', function() {
+                    this.style.transform = 'translateY(-10px) scale(1.02)';
+                });
+                
+                card.addEventListener('mouseleave', function() {
+                    this.style.transform = 'translateY(0) scale(1)';
+                });
+                
+                // Add click handler to select button
+                selectBtn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    showBookInfo(pdfName);
+                });
+                
+                // Add click handler to entire card
+                card.addEventListener('click', function() {
+                    showBookInfo(pdfName);
+                });
+            });
+            
+            // Initialize floating animations
+            const floatingElements = document.querySelectorAll('.floating-element');
+            floatingElements.forEach((element, index) => {
+                element.style.animationDelay = `${index * 0.8}s`;
+            });
+        });
+        
+        function toggleAccordion(header) {
+            const accordionItem = header.parentElement;
+            const content = accordionItem.querySelector('.accordion-content');
+            const icon = header.querySelector('.accordion-icon');
+            
+            // Toggle active state
+            const isActive = header.classList.contains('active');
+            
+            if (isActive) {
+                // Close accordion
+                header.classList.remove('active');
+                content.classList.remove('active');
+            } else {
+                // Open accordion
+                header.classList.add('active');
+                content.classList.add('active');
+            }
+        }
+
+        function showBookInfo(pdfName) {
+            selectedBookPdf = pdfName;
+            const book = bookData[pdfName];
+            
+            if (!book) return;
+            
+            // Populate modal with book information
+            document.getElementById('modalBookTitle').textContent = book.title;
+            
+            // Populate key points
+            const keyPointsList = document.getElementById('modalKeyPoints');
+            keyPointsList.innerHTML = '';
+            book.keyPoints.forEach(point => {
+                const li = document.createElement('li');
+                li.textContent = point;
+                keyPointsList.appendChild(li);
+            });
+            
+            // Populate other sections
+            document.getElementById('modalHistoricalContext').textContent = book.historicalContext;
+            document.getElementById('modalAuthorInfo').textContent = book.authorInfo;
+            document.getElementById('modalSummary').textContent = book.summary;
+            
+            // Reset accordion states (all closed)
+            const accordionHeaders = document.querySelectorAll('.accordion-header');
+            const accordionContents = document.querySelectorAll('.accordion-content');
+            
+            accordionHeaders.forEach(header => header.classList.remove('active'));
+            accordionContents.forEach(content => content.classList.remove('active'));
+            
+            // Show modal
+            document.getElementById('bookInfoModal').style.display = 'flex';
+        }
+        
+        function closeBookModal() {
+            document.getElementById('bookInfoModal').style.display = 'none';
+        }
+        
+        function startReading() {
+            // Close modal
+            closeBookModal();
+            
+            // Show loading overlay
+            document.getElementById('loadingOverlay').style.display = 'flex';
+            
+            // Redirect to app with selected book
+            setTimeout(() => {
+                window.location.href = `/app?book=${encodeURIComponent(selectedBookPdf)}`;
+            }, 1500);
+        }
+        
+        // Add some interactive animations
+        function createFloatingParticle() {
+            const particle = document.createElement('div');
+            particle.className = 'reading-particle';
+            particle.innerHTML = ['📖', '📚', '✨', '💡'][Math.floor(Math.random() * 4)];
+            particle.style.left = Math.random() * 100 + '%';
+            particle.style.animationDuration = (Math.random() * 3 + 2) + 's';
+            
+            document.querySelector('.background-animation').appendChild(particle);
+            
+            setTimeout(() => {
+                particle.remove();
+            }, 5000);
+        }
+        
+        // Create floating particles periodically
+        setInterval(createFloatingParticle, 3000);
+    </script>
+</body>
+</html>
