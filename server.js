@@ -118,9 +118,9 @@ app.post('/api/summarize', async (req, res) => {
 
     const promptText = `Faça um resumo claro e objetivo do seguinte texto em português. 
     Identifique e explique os pontos principais, conceitos-chave e ideias centrais do texto.
-    Mantenha o foco no conteúdo do texto, não no contexto histórico.
+    Mantenha o foco no conteúdo do texto, não no contexto histórico. Não utilize ** para dar enfase ao texto, ou títulos para destacar pontos.
     O resumo deve ser informativo e didático:
-
+    Considere que esse texto será lido por uma pessoa com dificuldade de leitura, então é ideal o uso de linguagem simples e de vocabulário comum:
     ${text}`;
     
     const response = await ai.models.generateContent({
@@ -145,16 +145,17 @@ app.post('/api/dictionary', async (req, res) => {
       return res.status(400).json({ error: 'Word is required' });
     }
 
-    const promptText = `Atue como um dicionário completo em português. Para a palavra ou expressão "${word}", forneça:
+    const promptText = `Atue como um dicionário em português. Para a palavra ou expressão "${word}", forneça as definições mais comuns.
 
-    1. **Definição**: Significado claro e preciso
-    2. **Classe gramatical**: (substantivo, verbo, adjetivo, etc.)
-    3. **Sinônimos**: Palavras com significado similar
-    4. **Antônimos**: Palavras com significado oposto (se aplicável)
-    5. **Exemplo de uso**: Uma frase demonstrando o uso correto
-    6. **Etimologia**: Origem da palavra (se relevante)
+IMPORTANTE: Retorne APENAS as definições no seguinte formato simples, sem asteriscos, sem títulos, sem formatação markdown:
 
-    Formate a resposta de forma clara e organizada em português.`;
+1: [primeira definição completa]
+2: [segunda definição completa]
+3: [terceira definição completa]
+
+Cada definição deve incluir o significado, classe gramatical entre parênteses, e um exemplo de uso se relevante.
+Não adicione títulos como "Definição:", "Sinônimos:", etc.
+Retorne apenas as linhas numeradas com as definições.`;
     
     const response = await ai.models.generateContent({
       model: 'gemini-2.0-flash-exp',

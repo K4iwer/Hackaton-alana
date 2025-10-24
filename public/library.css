@@ -169,9 +169,10 @@ body {
 .main-content {
     position: relative;
     z-index: 5;
-    max-width: 1200px;
+    max-width: 1400px;
     margin: 0 auto;
     padding: 3rem 2rem;
+    width: 100%;
 }
 
 /* Library Intro */
@@ -198,9 +199,13 @@ body {
 /* Books Grid */
 .books-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 2rem;
     margin-bottom: 4rem;
+    width: 100%;
+    max-width: 1200px;
+    margin-left: auto;
+    margin-right: auto;
 }
 
 .book-card {
@@ -214,6 +219,94 @@ body {
     cursor: pointer;
     position: relative;
     overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    height: auto;
+    min-width: 0;
+    width: 100%;
+}
+
+/* Read Badge */
+.read-badge {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+    color: white;
+    padding: 0.4rem 0.8rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    z-index: 10;
+    box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3);
+    animation: badgeSlideIn 0.3s ease-out;
+}
+
+@keyframes badgeSlideIn {
+    from {
+        opacity: 0;
+        transform: translateX(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.read-badge i {
+    font-size: 0.9rem;
+}
+
+/* Mark as Read Button */
+.mark-read-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: rgba(255, 255, 255, 0.9);
+    border: 2px solid rgba(102, 126, 234, 0.3);
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    z-index: 10;
+    color: #667eea;
+}
+
+.mark-read-btn:hover {
+    background: rgba(102, 126, 234, 0.1);
+    border-color: #667eea;
+    transform: scale(1.1);
+}
+
+.mark-read-btn.marked {
+    background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+    border-color: #4CAF50;
+    color: white;
+}
+
+.mark-read-btn.marked:hover {
+    background: linear-gradient(135deg, #45a049 0%, #3d8b40 100%);
+    transform: scale(1.1);
+}
+
+.mark-read-btn i {
+    font-size: 0.9rem;
+}
+
+/* Book card when read */
+.book-card.read {
+    opacity: 0.85;
+}
+
+.book-card.read:hover {
+    opacity: 1;
 }
 
 .book-card::before {
@@ -245,9 +338,10 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    margin: 0 auto 1.5rem;
+    margin: 0 auto 1rem;
     position: relative;
     box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+    flex-shrink: 0;
 }
 
 .book-cover.nebulosas {
@@ -281,7 +375,8 @@ body {
 /* Book Info */
 .book-info {
     text-align: center;
-    margin-bottom: 1.5rem;
+    margin-bottom: 1rem;
+    flex: 0 0 auto;
 }
 
 .book-info h3 {
@@ -295,7 +390,7 @@ body {
     color: #667eea;
     font-weight: 500;
     font-size: 0.9rem;
-    margin-bottom: 0.8rem;
+    margin-bottom: 0.5rem;
 }
 
 .book-description {
@@ -335,6 +430,7 @@ body {
     align-items: center;
     justify-content: center;
     gap: 0.5rem;
+    margin-top: auto;
 }
 
 .select-book-btn:hover {
@@ -348,12 +444,19 @@ body {
 
 /* Features Section */
 .features-section {
-    background: rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(10px);
-    border-radius: 20px;
-    padding: 2rem;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    color: white;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border-radius: 20px;
+  padding: 3rem 2.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: white;
+
+  /* Centralização */
+  display: block;
+  width: 100%;
+  max-width: 1200px;
+  margin: 3rem auto 0 auto; /* centraliza na página */
+  clear: both;
 }
 
 .features-section h3 {
@@ -364,19 +467,23 @@ body {
 }
 
 .features-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 1.5rem;
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 2rem;
 }
 
 .feature-item {
     display: flex;
-    align-items: flex-start;
-    gap: 1rem;
-    padding: 1rem;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 0.5rem;
+    padding: 2rem 1.5rem;
     background: rgba(255, 255, 255, 0.1);
-    border-radius: 12px;
+    border-radius: 15px;
     transition: all 0.3s ease;
+    min-height: 180px;
 }
 
 .feature-item:hover {
@@ -385,21 +492,25 @@ body {
 }
 
 .feature-item i {
-    font-size: 1.5rem;
+    font-size: 2rem;
     color: #fff;
-    margin-top: 0.2rem;
+    margin-bottom: 0.5rem;
 }
 
 .feature-item h4 {
     font-size: 1rem;
     font-weight: 600;
-    margin-bottom: 0.3rem;
+    margin-bottom: 0.5rem;
+    word-wrap: break-word;
+    width: 100%;
 }
 
 .feature-item p {
-    font-size: 0.9rem;
+    font-size: 0.85rem;
     opacity: 0.9;
     line-height: 1.4;
+    word-wrap: break-word;
+    width: 100%;
 }
 
 /* Footer */
