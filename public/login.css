@@ -15,7 +15,7 @@ body {
 /* Login Container */
 .login-container {
     min-height: 100vh;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #6696ea 0%, #28699f 100%);
     position: relative;
     display: flex;
     align-items: center;
@@ -124,7 +124,7 @@ body {
 .logo h1 {
     font-size: 2rem;
     font-weight: 700;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #6696ea 0%, #28699f 100%);;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -234,7 +234,7 @@ body {
 /* Buttons */
 .login-btn {
     width: 100%;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #6696ea 0%, #28699f 100%);
     color: white;
     border: none;
     padding: 0.8rem 1.5rem;

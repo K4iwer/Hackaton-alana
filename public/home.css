@@ -15,7 +15,7 @@ body {
 /* Home Container */
 .home-container {
     min-height: 100vh;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #6696ea 0%, #28699f 100%);
     position: relative;
     display: flex;
     align-items: center;
@@ -132,7 +132,7 @@ body {
     display: inline-block;
     width: 80px;
     height: 80px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #6696ea 0%, #28699f 100%);
     border-radius: 20px;
     display: flex;
     align-items: center;
@@ -159,7 +159,7 @@ body {
 .app-title {
     font-size: 3.5rem;
     font-weight: 800;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #6696ea 0%, #28699f 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -170,7 +170,7 @@ body {
 .title-underline {
     width: 100px;
     height: 4px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #6696ea 0%, #28699f 100%);
     margin: 0 auto;
     border-radius: 2px;
     animation: expand 1s ease-out 0.5s both;
@@ -242,7 +242,7 @@ body {
 }
 
 .login-btn {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #6696ea 0%, #28699f 100%);
     color: white;
     border: none;
     padding: 1rem 2.5rem;
